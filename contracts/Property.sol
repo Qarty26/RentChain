@@ -1,53 +1,35 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
+import "./Owner.sol";
+import "./Client.sol";
+
 contract PropertyRental {
     struct Property {
-        uint256 id; 
-        string name; 
-        string location; 
-        uint256 pricePerDay; // Price in wei per day
+        uint256 id;
+        string name;
+        string location;
+        uint256 pricePerDay;
         address owner;
     }
 
-    struct Booking {
-        uint256 propertyId;
-        uint256 startDate; // UNIX timestamp for the start date
-        uint256 endDate;   // UNIX timestamp for the end date
-        address renter;    // Address of the person who booked
-    }
-
     uint256 public propertyCount;
-    mapping(uint256 => Property) public properties; 
-    mapping(uint256 => mapping(uint256 => bool)) public bookings; // propertyId => date (UNIX timestamp) => isBooked
-    mapping(uint256 => Booking[]) public propertyBookings; // propertyId => list of bookings
+    mapping(uint256 => Property) public properties;
+    mapping(uint256 => mapping(uint256 => bool)) public isBooked; // propertyId -> day -> isBooked
 
-    mapping(address => Booking[]) public userBookings; // user address => list of their bookings
-    mapping(address => bool) public isOwner; 
+    Owner public ownerContract;
+    Client public clientContract;
 
     event PropertyAdded(uint256 id, string name, string location, address owner);
-    event PropertyBooked(uint256 propertyId, uint256 startDate, uint256 endDate, address renter);
+    event PropertyBooked(uint256 id, address client, uint256 startDate, uint256 endDate);
 
-    constructor() {
-        // Contract deployer becomes the first owner
-        isOwner[msg.sender] = true;
+    constructor(address _ownerContract, address _clientContract) {
+        ownerContract = Owner(_ownerContract);
+        clientContract = Client(_clientContract);
     }
 
-    modifier onlyOwner() {
-        require(isOwner[msg.sender], "Caller is not an owner");
-        _;
-    }
-
-    modifier propertyExists(uint256 _propertyId) {
-        require(_propertyId > 0 && _propertyId <= propertyCount, "Property does not exist");
-        _;
-    }
-
-    function addOwner(address _newOwner) external onlyOwner {
-        isOwner[_newOwner] = true;
-    }
-
-    function addProperty(string memory _name, string memory _location, uint256 _pricePerDay) external onlyOwner {
+    function addProperty(string memory _name, string memory _location, uint256 _pricePerDay) external {
+        require(ownerContract.isOwner(msg.sender), "Only owners can add properties");
         require(_pricePerDay > 0, "Price per day must be greater than zero");
 
         propertyCount++;
@@ -59,68 +41,32 @@ contract PropertyRental {
             owner: msg.sender
         });
 
+        ownerContract.addProperty(msg.sender, propertyCount);
         emit PropertyAdded(propertyCount, _name, _location, msg.sender);
     }
 
-    function bookProperty(
-        uint256 _propertyId, 
-        uint256 _startDate, 
-        uint256 _endDate
-    ) 
-        external 
-        payable 
-        propertyExists(_propertyId) 
-    {
-        Property storage property = properties[_propertyId];
+    function bookProperty(uint256 _propertyId, uint256 _startDate, uint256 _endDate) external payable {
+        require(clientContract.isClient(msg.sender), "Only clients can book properties");
+        require(_startDate < _endDate, "Invalid booking dates");
+        require(properties[_propertyId].id != 0, "Property does not exist");
 
-        // Ensure the start date is before the end date
-        require(_startDate < _endDate, "Invalid booking period");
+        uint256 totalCost = (properties[_propertyId].pricePerDay) * ((_endDate - _startDate) / 1 days);
+        require(msg.value >= totalCost, "Insufficient payment");
 
-        // Calculate the number of days and the total price
-        uint256 daysToBook = (_endDate - _startDate) / 1 days;
-        uint256 totalPrice = daysToBook * property.pricePerDay;
-
-        // Ensure the correct payment is sent
-        require(msg.value == totalPrice, "Incorrect payment amount");
-
-        // Check availability for all requested dates
-        for (uint256 date = _startDate; date < _endDate; date += 1 days) {
-            require(!bookings[_propertyId][date], "Property is already booked for one or more selected dates");
+        for (uint256 day = _startDate / 1 days; day < _endDate / 1 days; day++) {
+            require(!isBooked[_propertyId][day], "Property already booked for one or more days");
+            isBooked[_propertyId][day] = true;
         }
 
-        // Mark the property as booked for each date
-        for (uint256 date = _startDate; date < _endDate; date += 1 days) {
-            bookings[_propertyId][date] = true;
-        }
-
-        // Save the booking
-        Booking memory newBooking = Booking({
-            propertyId: _propertyId,
-            startDate: _startDate,
-            endDate: _endDate,
-            renter: msg.sender
-        });
-        propertyBookings[_propertyId].push(newBooking);
-        userBookings[msg.sender].push(newBooking);
-
-        // Emit the booking event
-        emit PropertyBooked(_propertyId, _startDate, _endDate, msg.sender);
+        clientContract.addBooking(msg.sender, _propertyId);
+        emit PropertyBooked(_propertyId, msg.sender, _startDate, _endDate);
     }
 
-    function getBookings(uint256 _propertyId) 
-        external 
-        view 
-        propertyExists(_propertyId) 
-        returns (Booking[] memory) 
-    {
-        return propertyBookings[_propertyId];
+    function getPropertiesByOwner(address _owner) external view returns (uint256[] memory) {
+        return ownerContract.getOwnerProperties(_owner);
     }
 
-    function getUserBookings(address _user) 
-        external 
-        view 
-        returns (Booking[] memory) 
-    {
-        return userBookings[_user];
+    function getUserBookings(address _client) external view returns (uint256[] memory) {
+        return clientContract.getClientBookings(_client);
     }
 }
