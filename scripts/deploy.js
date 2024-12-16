@@ -6,13 +6,13 @@ async function deploy() {
 
     // Deploy Owner contract
     const OwnerFactory = await ethers.getContractFactory("Owner");
-    const ownerContract = await OwnerFactory.deploy(deployer.address);
+    const ownerContract = await OwnerFactory.deploy(deployer.address);  // passing the PropertyRental address
     await ownerContract.deployed();
     console.log("Owner contract deployed at:", ownerContract.address);
 
     // Deploy Client contract
     const ClientFactory = await ethers.getContractFactory("Client");
-    const clientContract = await ClientFactory.deploy(deployer.address);
+    const clientContract = await ClientFactory.deploy(deployer.address);  // passing the PropertyRental address
     await clientContract.deployed();
     console.log("Client contract deployed at:", clientContract.address);
 
@@ -22,67 +22,114 @@ async function deploy() {
     await propertyRental.deployed();
     console.log("PropertyRental deployed at:", propertyRental.address);
 
-    // Add two owners
-    let tx = await ownerContract.connect(deployer).addOwner(owner1.address);
-    await tx.wait();
-    console.log("Added Owner1:", owner1.address);
-
-    tx = await ownerContract.connect(deployer).addOwner(owner2.address);
-    await tx.wait();
-    console.log("Added Owner2:", owner2.address);
+    // Initialize contracts in Owner and Client
+    await ownerContract.connect(deployer).addOwner(owner1.address);
+    await ownerContract.connect(deployer).addOwner(owner2.address);
+    await clientContract.connect(deployer).addClient(client1.address);
+    await clientContract.connect(deployer).addClient(client2.address);
 
     // Owners add properties
-    tx = await propertyRental.connect(owner1).addProperty("Cozy Apartment", "Paris", ethers.utils.parseEther("0.2"));
-    await tx.wait();
-    console.log("Owner1 added property 1");
+    await propertyRental.connect(owner1).addProperty("Cozy Apartment", "Paris", ethers.utils.parseEther("0.2"));
+    console.log("Owner1 added property: 1");
+    await propertyRental.connect(owner1).addProperty("Modern Loft", "Berlin", ethers.utils.parseEther("0.3"));
+    console.log("Owner1 added property: 2");
+    await propertyRental.connect(owner2).addProperty("Beach House", "Malibu", ethers.utils.parseEther("0.5"));
+    console.log("Owner2 added property: 3");
+    await propertyRental.connect(owner2).addProperty("Mountain Cabin", "Aspen", ethers.utils.parseEther("0.4"));
+    console.log("Owner2 added property: 4");
 
-    tx = await propertyRental.connect(owner1).addProperty("Modern Loft", "Berlin", ethers.utils.parseEther("0.3"));
-    await tx.wait();
-    console.log("Owner1 added property 2");
 
-    tx = await propertyRental.connect(owner2).addProperty("Beach House", "Malibu", ethers.utils.parseEther("0.5"));
-    await tx.wait();
-    console.log("Owner2 added property 3");
-
-    tx = await propertyRental.connect(owner2).addProperty("Mountain Cabin", "Aspen", ethers.utils.parseEther("0.4"));
-    await tx.wait();
-    console.log("Owner2 added property 4");
-
-    // Register two clients
-    tx = await clientContract.connect(deployer).addClient(client1.address);
-    await tx.wait();
-    console.log("Registered Client1:", client1.address);
-
-    tx = await clientContract.connect(deployer).addClient(client2.address);
-    await tx.wait();
-    console.log("Registered Client2:", client2.address);
+    // Show initial balances of owners and clients
+    // console.log("Initial Balances:");
+    // console.log("Deployer balance:", ethers.utils.formatEther(await deployer.getBalance()));
+    // console.log("Owner1 balance:", ethers.utils.formatEther(await owner1.getBalance()));
+    // console.log("Owner2 balance:", ethers.utils.formatEther(await owner2.getBalance()));
+    // console.log("Client1 balance:", ethers.utils.formatEther(await client1.getBalance()));
+    // console.log("Client2 balance:", ethers.utils.formatEther(await client2.getBalance()));
 
     // Clients book properties
-    tx = await propertyRental.connect(client1).bookProperty(1, Math.floor(Date.now() / 1000), Math.floor(Date.now() / 1000) + 86400 * 3, {
+    const client1BookingTx = await propertyRental.connect(client1).bookProperty(1, Math.floor(Date.now() / 1000), Math.floor(Date.now() / 1000) + 86400 * 3, {
         value: ethers.utils.parseEther("0.6")
     });
-    await tx.wait();
+    await client1BookingTx.wait();
     console.log("Client1 booked property 1 for 3 days");
 
-    tx = await propertyRental.connect(client2).bookProperty(3, Math.floor(Date.now() / 1000), Math.floor(Date.now() / 1000) + 86400 * 5, {
+    const client2BookingTx = await propertyRental.connect(client2).bookProperty(3, Math.floor(Date.now() / 1000), Math.floor(Date.now() / 1000) + 86400 * 5, {
         value: ethers.utils.parseEther("2.5")
     });
-    await tx.wait();
+    await client2BookingTx.wait();
     console.log("Client2 booked property 3 for 5 days");
 
-    // Fetch properties owned by each owner
-    let owner1Properties = await propertyRental.getPropertiesByOwner(owner1.address);
-    console.log("Properties owned by Owner1:", owner1Properties.map(p => p.toString()));
+    const client3BookingTx = await propertyRental.connect(client2).bookProperty(2, Math.floor(Date.now() / 1000), Math.floor(Date.now() / 1000) + 86400 * 3, {
+        value: ethers.utils.parseEther("0.9")
+    });
+    await client3BookingTx.wait();
+    console.log("Client2 booked property 2 for 3 days");
 
-    let owner2Properties = await propertyRental.getPropertiesByOwner(owner2.address);
-    console.log("Properties owned by Owner2:", owner2Properties.map(p => p.toString()));
+    // Show final balances after bookings
+    // console.log("Final Balances after bookings:");
+    // console.log("Deployer balance:", ethers.utils.formatEther(await deployer.getBalance()));
+    // console.log("Owner1 balance:", ethers.utils.formatEther(await owner1.getBalance()));
+    // console.log("Owner2 balance:", ethers.utils.formatEther(await owner2.getBalance()));
+    // console.log("Client1 balance:", ethers.utils.formatEther(await client1.getBalance()));
+    // console.log("Client2 balance:", ethers.utils.formatEther(await client2.getBalance()));
+
+    // Fetch properties owned by each owner
+    // let owner1Properties = await propertyRental.getPropertiesByOwner(owner1.address);
+    // console.log("Properties owned by Owner1:");
+    // for (let i = 0; i < owner1Properties.length; i++) {
+    //     let propertyId = owner1Properties[i];
+    //     let property = await propertyRental.properties(propertyId);
+    //     console.log(`  Property ID: ${propertyId}, Name: ${property.name}, Location: ${property.location}`);
+    // }
+
+    // let owner2Properties = await propertyRental.getPropertiesByOwner(owner2.address);
+    // console.log("Properties owned by Owner2:");
+    // for (let i = 0; i < owner2Properties.length; i++) {
+    //     let propertyId = owner2Properties[i];
+    //     let property = await propertyRental.properties(propertyId);
+    //     console.log(`  Property ID: ${propertyId}, Name: ${property.name}, Location: ${property.location}`);
+    // }
 
     // Fetch properties booked by each client
-    let client1Bookings = await propertyRental.getUserBookings(client1.address);
-    console.log("Properties booked by Client1:", client1Bookings.map(p => p.toString()));
+    // let client1Bookings = await propertyRental.getUserBookings(client1.address);
+    // console.log("Properties booked by Client1:");
+    // for (let i = 0; i < client1Bookings.length; i++) {
+    //     let propertyId = client1Bookings[i];
+    //     let property = await propertyRental.properties(propertyId);
+    //     console.log(`  Property ID: ${propertyId}, Name: ${property.name}, Location: ${property.location}`);
+    // }
 
-    let client2Bookings = await propertyRental.getUserBookings(client2.address);
-    console.log("Properties booked by Client2:", client2Bookings.map(p => p.toString()));
+    // let client2Bookings = await propertyRental.getUserBookings(client2.address);
+    // console.log("Properties booked by Client2:");
+    // for (let i = 0; i < client2Bookings.length; i++) {
+    //     let propertyId = client2Bookings[i];
+    //     let property = await propertyRental.properties(propertyId);
+    //     console.log(`  Property ID: ${propertyId}, Name: ${property.name}, Location: ${property.location}`);
+    // }
+
+
+    console.log("Revenues before withdrawal:");
+    const owner1Revenue = await propertyRental.ownerRevenue(owner1.address);
+    console.log("Owner1 revenue:", ethers.utils.formatEther(owner1Revenue));
+    const owner2Revenue = await propertyRental.ownerRevenue(owner2.address);
+    console.log("Owner2 revenue:", ethers.utils.formatEther(owner2Revenue));
+
+    // Owners withdraw revenues
+    console.log("Withdawing ", owner1.address)
+    await propertyRental.connect(owner1).withdraw(owner1Revenue);
+    console.log(owner1.address, "withdrew revenue:", ethers.utils.formatEther(owner1Revenue));
+
+    await propertyRental.connect(owner2).withdraw(owner2Revenue);
+    console.log("Owner2 withdrew revenue:", ethers.utils.formatEther(owner2Revenue));
+
+    // Show final balances after withdrawal
+    console.log("Final Balances after withdrawals:");
+    console.log("Deployer balance:", ethers.utils.formatEther(await deployer.getBalance()));
+    console.log("Owner1 balance:", ethers.utils.formatEther(await owner1.getBalance()));
+    console.log("Owner2 balance:", ethers.utils.formatEther(await owner2.getBalance()));
+    console.log("Client1 balance:", ethers.utils.formatEther(await client1.getBalance()));
+    console.log("Client2 balance:", ethers.utils.formatEther(await client2.getBalance()));
 }
 
 deploy()
