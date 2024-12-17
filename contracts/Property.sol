@@ -17,7 +17,7 @@ contract PropertyRental {
     uint256 public propertyCount;
     mapping(uint256 => Property) public properties;
     mapping(uint256 => mapping(uint256 => bool)) public isBooked; // propertyId -> day -> isBooked
-    mapping(address => uint256) public ownerRevenue; // Tracks revenue for each owner
+    mapping(address => uint256) public ownerRevenue;
 
     Owner public ownerContract;
     Client public clientContract;
@@ -31,7 +31,6 @@ contract PropertyRental {
         clientContract = Client(_clientContract);
     }
 
-    // Add property by an owner
     function addProperty(
         string memory _name,
         string memory _location,
@@ -66,23 +65,23 @@ contract PropertyRental {
         uint256 daysToBook = (_endDate - _startDate) / 1 days;
         uint256 totalCost = properties[_propertyId].pricePerDay * daysToBook;
 
-        // Ensure sufficient Ether is sent
         require(msg.value == totalCost, "Incorrect Ether value sent");
 
-        // Accumulate funds in owner's revenue
         ownerRevenue[properties[_propertyId].owner] += msg.value;
 
-        // Mark dates as booked
         for (uint256 day = _startDate / 1 days; day < _endDate / 1 days; day++) {
             require(!isBooked[_propertyId][day], "Property already booked for one or more days");
             isBooked[_propertyId][day] = true;
         }
 
-        // Add booking to client record
         clientContract.addBooking(msg.sender, _propertyId);
 
         emit PropertyBooked(_propertyId, msg.sender, _startDate, _endDate, totalCost);
     }
+
+
+
+
 
     function withdraw(uint256 amount) external {
 
@@ -90,35 +89,44 @@ contract PropertyRental {
         require(ownerRevenue[msg.sender] >= amount, "Insufficient revenue to withdraw");
         ownerRevenue[msg.sender] -= amount;
 
-        uint256 contractBalanceBefore = address(this).balance;
-        console.log("Contract balance before:", contractBalanceBefore);
+        // uint256 contractBalanceBefore = address(this).balance;
+        // console.log("Contract balance before:", contractBalanceBefore);
 
-        // Attempt to transfer
-        console.log("Before: ", msg.sender.balance);
-        (bool success, ) = msg.sender.call{value: amount}("");
+        // console.log("Before: ", msg.sender.balance);
+        
+        (bool success, ) = payable(msg.sender).call{value: amount}("");
         require(success, "Transfer failed");
-        console.log("After: ", msg.sender.balance);
+        // console.log("After: ", msg.sender.balance);
 
         uint256 contractBalanceAfter = address(this).balance;
-        console.log("Contract balance after:", contractBalanceAfter);
-        console.log(msg.sender);
+        console.logString("Contract balance after");
+        console.logUint(contractBalanceAfter);
+        console.logAddress(msg.sender);
+
 
         emit Withdraw(msg.sender, amount);
+        // require(1==0, "False");
 
     }
 
-    // Get properties owned by an owner
+
+
+
+
+
+
+
     function getPropertiesByOwner(address _owner) external view returns (uint256[] memory) {
         return ownerContract.getOwnerProperties(_owner);
     }
 
-    // Get bookings made by a client
+
     function getUserBookings(address _client) external view returns (uint256[] memory) {
         return clientContract.getClientBookings(_client);
     }
 
-    // Allow the contract to accept direct Ether deposits
     receive() external payable {}
 
-    fallback() external payable {}
+    fallback() external payable { }
+
 }

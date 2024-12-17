@@ -8,6 +8,8 @@ module.exports = {
       mining: {
         interval: 2000 //ms
       }
+      // ,
+      // loggingEnabled : false
     }
   },
   defaultNetwork: "hardhat",

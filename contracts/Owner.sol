@@ -14,7 +14,7 @@ contract Owner {
 
     constructor(address _propertyRentalContract) {
         propertyRentalContract = _propertyRentalContract;
-        isOwner[msg.sender] = true; // Deployer is the first owner
+        isOwner[msg.sender] = true;
     }
 
     function addOwner(address _owner) external onlyPropertyRental {
