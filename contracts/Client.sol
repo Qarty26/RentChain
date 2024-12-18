@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-contract Client {
+contract Client is ERC721URIStorage, Ownable{
     mapping(address => bool) public isClient;
     mapping(address => uint256[]) public clientBookings;
 
