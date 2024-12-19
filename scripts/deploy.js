@@ -9,13 +9,18 @@ async function deploy() {
     await ownerContract.deployed();
     console.log("Owner contract deployed at:", ownerContract.address);
 
+    const NFTFactory = await ethers.getContractFactory("NFT");
+    const nftContract = await NFTFactory.deploy();
+    await nftContract.deployed();
+    console.log("NFT contract deployed at:", nftContract.address);
+
     const ClientFactory = await ethers.getContractFactory("Client");
     const clientContract = await ClientFactory.deploy(deployer.address);
     await clientContract.deployed();
     console.log("Client contract deployed at:", clientContract.address);
 
     const PropertyRentalFactory = await ethers.getContractFactory("PropertyRental");
-    const propertyRental = await PropertyRentalFactory.deploy(ownerContract.address, clientContract.address);
+    const propertyRental = await PropertyRentalFactory.deploy(ownerContract.address, clientContract.address, nftContract.address);
     await propertyRental.deployed();
     console.log("PropertyRental deployed at:", propertyRental.address);
 
@@ -103,19 +108,12 @@ async function deploy() {
     console.log("Owner2 revenue:", ethers.utils.formatEther(owner2Revenue));
 
 
-    console.log("Withdawing ", owner1.address)
     let tx = await propertyRental.connect(owner1).withdraw(owner1Revenue);
     await tx.wait();
 
     tx = await propertyRental.connect(owner2).withdraw(owner2Revenue);
     await tx.wait();
 
-    
-    console.log("Revenues after withdrawal:");
-    const owner1Revenuee = await propertyRental.ownerRevenue(owner1.address);
-    console.log("Owner1 revenue:", ethers.utils.formatEther(owner1Revenuee));
-    const owner2Revenuee = await propertyRental.ownerRevenue(owner2.address);
-    console.log("Owner2 revenue:", ethers.utils.formatEther(owner2Revenuee));
 
     console.log("Final Balances after withdrawals:");
     console.log("Deployer balance:", ethers.utils.formatEther(await deployer.getBalance()));
@@ -123,6 +121,17 @@ async function deploy() {
     console.log("Owner2 balance:", ethers.utils.formatEther(await owner2.getBalance()));
     console.log("Client1 balance:", ethers.utils.formatEther(await client1.getBalance()));
     console.log("Client2 balance:", ethers.utils.formatEther(await client2.getBalance()));
+
+
+    console.log("Owner1 NFTs:")
+    let tokenIds = nftContract.connect(owner1).getTokenIds();
+    for(let i in tokenIds)
+    {
+        console.log(i.name);
+        console.log(i.description);
+    }
+
+    
 }
 
 deploy()

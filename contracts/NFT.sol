@@ -2,13 +2,14 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "hardhat/console.sol";
 
 contract NFT is ERC721 {
     uint256 public tokenCount = 0;
 
     event TokenMinted(uint256 id, string name, address owner);
 
-    mapping(address => mapping(uint256 => bool)) private ownedTokens; // Mapping of mappings
+    mapping(address => uint256[]) private tokens;
     mapping(uint256 => string) private names;
     mapping(uint256 => string) private descriptions;
     mapping(uint256 => string) private imagesUrls;
@@ -21,14 +22,18 @@ contract NFT is ERC721 {
         string memory description,
         string memory url
     ) external {
+
         tokenCount++;
         uint256 newTokenId = tokenCount;
         _safeMint(owner, newTokenId);
 
-        ownedTokens[owner][newTokenId] = true;
+        tokens[owner].push(newTokenId);
         names[newTokenId] = name;
         descriptions[newTokenId] = description;
         imagesUrls[newTokenId] = url;
+
+        console.logString("NFT Created for:");
+        console.logAddress(owner);
 
         emit TokenMinted(newTokenId, name, owner);
     }
@@ -43,9 +48,8 @@ contract NFT is ERC721 {
 
         safeTransferFrom(from, to, tokenId);
 
-        require(ownedTokens[from][tokenId], "Token not owned by sender");
-        ownedTokens[from][tokenId] = false; 
-        ownedTokens[to][tokenId] = true;
+        tokens[from].pop();
+        tokens[to].push(tokenId);
     }
 
     // Public getters for token metadata
@@ -61,27 +65,9 @@ contract NFT is ERC721 {
         return imagesUrls[tokenId];
     }
 
-    // Check if an address owns a specific token
-    function isOwner(address owner, uint256 tokenId) public view returns (bool) {
-        return ownedTokens[owner][tokenId];
-    }
-
 
     function getTokenIds() public view returns (uint256[] memory) {
-        uint256 count = 0;
-        uint256[] memory temp = new uint256[](tokenCount); // Temporary storage for token IDs
 
-        for (uint256 tokenId = 1; tokenId <= tokenCount; tokenId++) {
-            if (ownedTokens[msg.sender][tokenId]) {
-                temp[count] = tokenId;
-                count++;
-            }
-        }
-
-        uint256[] memory result = new uint256[](count);
-        for (uint256 i = 0; i < count; i++) {
-            result[i] = temp[i];
-        }
-        return result;
+        return tokens[msg.sender];
     }
 }

@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./Owner.sol";
 import "./Client.sol";
+import "./NFT.sol";
 import "hardhat/console.sol";
 
 contract PropertyRental {
@@ -21,14 +22,16 @@ contract PropertyRental {
 
     Owner public ownerContract;
     Client public clientContract;
+    NFT public nftContract;
 
     event PropertyAdded(uint256 id, string name, string location, address owner);
     event PropertyBooked(uint256 id, address client, uint256 startDate, uint256 endDate, uint256 totalCost);
     event Withdraw(address owner, uint256 amount);
 
-    constructor(address _ownerContract, address _clientContract) {
+    constructor(address _ownerContract, address _clientContract, address _nftContract) {
         ownerContract = Owner(_ownerContract);
         clientContract = Client(_clientContract);
+        nftContract = NFT(_nftContract);
     }
 
     function addProperty(
@@ -47,6 +50,8 @@ contract PropertyRental {
             pricePerDay: _pricePerDay,
             owner: payable(msg.sender)
         });
+
+        nftContract.createToken(msg.sender, _name, _location, _location);
 
         ownerContract.addProperty(msg.sender, propertyCount);
         emit PropertyAdded(propertyCount, _name, _location, msg.sender);
@@ -91,21 +96,20 @@ contract PropertyRental {
 
         // uint256 contractBalanceBefore = address(this).balance;
         // console.log("Contract balance before:", contractBalanceBefore);
-
         // console.log("Before: ", msg.sender.balance);
         
+
         (bool success, ) = payable(msg.sender).call{value: amount}("");
         require(success, "Transfer failed");
+
+
         // console.log("After: ", msg.sender.balance);
-
-        uint256 contractBalanceAfter = address(this).balance;
-        console.logString("Contract balance after");
-        console.logUint(contractBalanceAfter);
-        console.logAddress(msg.sender);
-
+        // uint256 contractBalanceAfter = address(this).balance;
+        // console.logString("Contract balance after");
+        // console.logUint(contractBalanceAfter);
+        // console.logAddress(msg.sender);
 
         emit Withdraw(msg.sender, amount);
-        // require(1==0, "False");
 
     }
 
