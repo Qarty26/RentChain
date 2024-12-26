@@ -22,3 +22,23 @@ export async function getClient1Info() {
     balance: ethers.utils.formatEther(balance)
   };
 }
+
+// Function to transfer Ether
+export async function transferEther(from, to, amount) {
+  const signer = provider.getSigner(from);
+  const tx = await signer.sendTransaction({
+    to: to,
+    value: ethers.utils.parseEther(amount)
+  });
+  await tx.wait();
+  return tx;
+}
+
+// Function to call a contract function
+export async function callContractFunction(contractAddress, abi, functionName, ...args) {
+  const signer = provider.getSigner();
+  const contract = new ethers.Contract(contractAddress, abi, signer);
+  const tx = await contract[functionName](...args);
+  await tx.wait();
+  return tx;
+}
