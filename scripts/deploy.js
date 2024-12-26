@@ -70,6 +70,8 @@ async function deploy() {
     tx = await propertyRental.connect(owner2).withdraw(owner2Revenue);
     await tx.wait();
 
+
+
     console.log("Final Balances after withdrawals:");
     console.log("Deployer balance:", ethers.utils.formatEther(await deployer.getBalance()));
     console.log("Owner1 balance:", ethers.utils.formatEther(await owner1.getBalance()));
@@ -97,7 +99,7 @@ async function deploy() {
         },
         client1: {
             address: client1.address,
-            balance: ethers.utils.formatEther(await client1.getBalance())
+            balance: ethers.utils.formatEther(await client1.getBalance()) 
         }
     };
 
