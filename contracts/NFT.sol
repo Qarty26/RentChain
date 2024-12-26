@@ -22,6 +22,7 @@ contract NFT is ERC721 {
         string memory description,
         string memory url
     ) external {
+        
 
         tokenCount++;
         uint256 newTokenId = tokenCount;
@@ -68,6 +69,8 @@ contract NFT is ERC721 {
 
     function getTokenIds() public view returns (uint256[] memory) {
 
+        console.logString("Msg sender:");
+        console.logAddress(msg.sender);
         return tokens[msg.sender];
     }
 }

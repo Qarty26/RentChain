@@ -124,6 +124,7 @@ async function deploy() {
 
 
     console.log("Owner1 NFTs:")
+    console.log(owner1.address)
     let tokenIds = nftContract.connect(owner1).getTokenIds();
     for(let i in tokenIds)
     {
