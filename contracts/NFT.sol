@@ -54,23 +54,21 @@ contract NFT is ERC721 {
     }
 
     // Public getters for token metadata
-    function name(uint256 tokenId) public view returns (string memory) {
+    function getName(uint256 tokenId) public view returns (string memory) {
         return names[tokenId];
     }
 
-    function description(uint256 tokenId) public view returns (string memory) {
+    function getDescription(uint256 tokenId) public view returns (string memory) {
         return descriptions[tokenId];
     }
 
-    function url(uint256 tokenId) public view returns (string memory) {
+    function getUrl(uint256 tokenId) public view returns (string memory) {
         return imagesUrls[tokenId];
     }
 
 
     function getTokenIds() public view returns (uint256[] memory) {
 
-        console.logString("Msg sender:");
-        console.logAddress(msg.sender);
         return tokens[msg.sender];
     }
 }

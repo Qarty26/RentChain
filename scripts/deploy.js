@@ -31,13 +31,20 @@ async function deploy() {
     await clientContract.connect(deployer).addClient(client1.address);
     await clientContract.connect(deployer).addClient(client2.address);
 
-    await propertyRental.connect(owner1).addProperty("Cozy Apartment", "Paris", ethers.utils.parseEther("0.2"));
+    const prop1 = await propertyRental.connect(owner1).addProperty("Cozy Apartment", "Paris", ethers.utils.parseEther("0.2"));
+    await prop1.wait();
     console.log("Owner1 added property: 1");
-    await propertyRental.connect(owner1).addProperty("Modern Loft", "Berlin", ethers.utils.parseEther("0.3"));
+
+    const prop2 = await propertyRental.connect(owner1).addProperty("Modern Loft", "Berlin", ethers.utils.parseEther("0.3"));
+    await prop2.wait();
     console.log("Owner1 added property: 2");
-    await propertyRental.connect(owner2).addProperty("Beach House", "Malibu", ethers.utils.parseEther("0.5"));
+
+    const prop3 =  await propertyRental.connect(owner2).addProperty("Beach House", "Malibu", ethers.utils.parseEther("0.5"));
+    await prop3.wait();
     console.log("Owner2 added property: 3");
-    await propertyRental.connect(owner2).addProperty("Mountain Cabin", "Aspen", ethers.utils.parseEther("0.4"));
+
+    const prop4 = await propertyRental.connect(owner2).addProperty("Mountain Cabin", "Aspen", ethers.utils.parseEther("0.4"));
+    await prop4.wait();
     console.log("Owner2 added property: 4");
 
     const client1BookingTx = await propertyRental.connect(client1).bookProperty(1, Math.floor(Date.now() / 1000), Math.floor(Date.now() / 1000) + 86400 * 3, {
@@ -81,7 +88,9 @@ async function deploy() {
 
     console.log("Owner1 NFTs:")
     console.log(owner1.address)
-    let tokenIds = nftContract.connect(owner1).getTokenIds();
+    const tokenIds = await nftContract.connect(owner1).getTokenIds();
+    await tokenIds.wait();
+    
     for(let i in tokenIds)
     {
         console.log(i.name);

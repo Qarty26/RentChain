@@ -1,4 +1,4 @@
-<template>
+x<template>
   <div class="app-container">
     <h1 class="main-title">Web3 Account Info</h1>
     <ul class="account-list">
