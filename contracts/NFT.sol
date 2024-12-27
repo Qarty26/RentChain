@@ -33,9 +33,6 @@ contract NFT is ERC721 {
         descriptions[newTokenId] = description;
         imagesUrls[newTokenId] = url;
 
-        console.logString("NFT Created for:");
-        console.logAddress(owner);
-
         emit TokenMinted(newTokenId, name, owner);
     }
 

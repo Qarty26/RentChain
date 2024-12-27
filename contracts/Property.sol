@@ -57,6 +57,11 @@ contract PropertyRental {
         emit PropertyAdded(propertyCount, _name, _location, msg.sender);
     }
 
+    function getPropertyCount() public view returns (uint256) {
+        return propertyCount;
+    }
+
+
     // Book property by a client
     function bookProperty(
         uint256 _propertyId,
