@@ -42,3 +42,7 @@ export async function callContractFunction(contractAddress, abi, functionName, .
   await tx.wait();
   return tx;
 }
+
+export async function getOwner1NFTs() {
+  return addresses.owner1.nfts;
+}
