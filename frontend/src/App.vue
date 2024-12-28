@@ -1,4 +1,4 @@
-x<template>
+<template>
   <div class="app-container">
     <h1 class="main-title">Web3 Account Info</h1>
     <ul class="account-list">
@@ -24,6 +24,14 @@ x<template>
       <li class="info-item">Balance: <span class="info-value">{{ owner1Info.balance }} ETH</span></li>
     </ul>
 
+    <h2 class="section-title">Owner1 NFTs</h2>
+    <ul class="nft-list">
+      <li v-for="nft in owner1NFTs" :key="nft.tokenId" class="nft-item">
+        <p>Name: <span class="nft-value">{{ nft.name }}</span></p>
+        <p>Location: <span class="nft-value">{{ nft.description }}</span></p>
+      </li>
+    </ul>
+
     <h2 class="section-title">Client1 Info</h2>
     <ul class="info-list">
       <li class="info-item">Address: <span class="info-value">{{ client1Info.address }}</span></li>
@@ -38,7 +46,7 @@ x<template>
 </template>
 
 <script>
-import { getContractAddresses, getOwner1Info, getClient1Info, transferEther, callContractFunction } from "../../scripts/ethersUtils";
+import { getContractAddresses, getOwner1Info, getClient1Info, getOwner1NFTs, transferEther, callContractFunction } from "../../scripts/ethersUtils";
 
 export default {
   data() {
@@ -47,13 +55,15 @@ export default {
       balance: null,
       contractAddresses: {},
       owner1Info: {},
-      client1Info: {}
+      client1Info: {},
+      owner1NFTs: []
     };
   },
   async mounted() {
     this.contractAddresses = getContractAddresses();
     this.owner1Info = await getOwner1Info();
     this.client1Info = await getClient1Info();
+    this.owner1NFTs = await getOwner1NFTs();
   },
   methods: {
     async transferEther() {
@@ -91,7 +101,7 @@ body {
 }
 
 .app-container {
-  max-width: 800px;
+  max-width: 1200px;
   margin: 30px auto;
   padding: 20px;
   background-color: #fff;
@@ -100,7 +110,7 @@ body {
 }
 
 .main-title {
-  font-size: 2rem;
+  font-size: 2.5rem;
   font-weight: 600;
   text-align: center;
   margin-bottom: 20px;
@@ -108,25 +118,25 @@ body {
 }
 
 .section-title {
-  font-size: 1.5rem;
+  font-size: 2rem;
   margin-bottom: 10px;
   color: #1e212d;
 }
 
-.account-list, .contract-list, .info-list {
+.account-list, .contract-list, .info-list, .nft-list {
   list-style: none;
   padding: 0;
   margin-bottom: 20px;
 }
 
-.account-item, .contract-item, .info-item {
-  padding: 10px;
+.account-item, .contract-item, .info-item, .nft-item {
+  padding: 15px;
   border-bottom: 1px solid #e2e2e2;
-  font-size: 1rem;
+  font-size: 1.2rem;
   color: #4a4e69;
 }
 
-.account-item span, .balance-item span, .info-value {
+.account-item span, .balance-item span, .info-value, .nft-value {
   font-weight: bold;
   color: #2a9d8f;
 }
@@ -137,7 +147,7 @@ body {
 }
 
 .balance-item {
-  font-size: 1.1rem;
+  font-size: 1.3rem;
   color: #2a9d8f;
 }
 
@@ -149,8 +159,8 @@ body {
 }
 
 .action-button {
-  padding: 12px 24px;
-  font-size: 1rem;
+  padding: 15px 30px;
+  font-size: 1.2rem;
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -186,15 +196,16 @@ body {
   }
 
   .main-title {
-    font-size: 1.5rem;
+    font-size: 2rem;
   }
 
   .section-title {
-    font-size: 1.2rem;
+    font-size: 1.5rem;
   }
 
   .action-button {
     padding: 10px 20px;
+    font-size: 1rem;
   }
 }
 </style>

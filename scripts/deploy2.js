@@ -42,18 +42,17 @@ async function deploy() {
 
     console.log("Owner1 NFTs:")
     console.log(owner1.address)
-    let tokenIds = await nftContract.connect(owner1).getTokenIds();
+
+    // After the loop that logs the NFT details
+    const tokenIds = await nftContract.connect(owner1).getTokenIds();
+    let owner1NFTs = [];
 
     for (const tokenId of tokenIds) {
         const name = await nftContract.getName(tokenId);
         const description = await nftContract.getDescription(tokenId);
-    
-        console.log(`Token ID: ${tokenId}`);
-        console.log(`Name: ${name}`);
-        console.log(`Description: ${description}`);
+        owner1NFTs.push({ tokenId, name, description });
     }
 
-    // save addresses and balances to a JSON file
     const addresses = {
         owner: ownerContract.address,
         client: clientContract.address,
@@ -61,11 +60,12 @@ async function deploy() {
         propertyRental: propertyRental.address,
         owner1: {
             address: owner1.address,
-            balance: ethers.utils.formatEther(await owner1.getBalance())
+            balance: ethers.utils.formatEther(await owner1.getBalance()),
+            nfts: owner1NFTs
         },
         client1: {
             address: client1.address,
-            balance: ethers.utils.formatEther(await client1.getBalance()) 
+            balance: ethers.utils.formatEther(await client1.getBalance())
         }
     };
 
