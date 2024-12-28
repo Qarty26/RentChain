@@ -18,6 +18,8 @@ contract Owner {
     }
 
     function addOwner(address _owner) external onlyPropertyRental {
+
+        require(!isOwner[_owner], "The address is already an owner!");
         isOwner[_owner] = true;
     }
 

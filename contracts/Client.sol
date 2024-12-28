@@ -17,6 +17,7 @@ contract Client {
     }
 
     function addClient(address _client) external onlyPropertyRental {
+        require(!isClient[_client], "The address is already a client!");
         isClient[_client] = true;
     }
 

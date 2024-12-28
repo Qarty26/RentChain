@@ -71,6 +71,7 @@ contract PropertyRental {
         require(clientContract.isClient(msg.sender), "Only clients can book properties");
         require(_startDate < _endDate, "Invalid booking dates");
         require(properties[_propertyId].id != 0, "Property does not exist");
+        require(_endDate - _startDate >= 1 days);
 
         uint256 daysToBook = (_endDate - _startDate) / 1 days;
         uint256 totalCost = properties[_propertyId].pricePerDay * daysToBook;
