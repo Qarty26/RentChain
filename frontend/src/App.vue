@@ -25,7 +25,10 @@
     </ul>
 
     <h2 class="section-title">Owner1 NFTs</h2>
-    <ul class="nft-list">
+    <button @click="toggleNFTs" class="action-button nft-display-btn">
+      {{ showNFTs ? 'Hide Owner 1 NFTs' : 'Display Owner 1 NFTs' }}
+    </button>
+    <ul v-if="showNFTs" class="nft-list">
       <li v-for="nft in owner1NFTs" :key="nft.tokenId" class="nft-item">
         <p>Name: <span class="nft-value">{{ nft.name }}</span></p>
         <p>Location: <span class="nft-value">{{ nft.description }}</span></p>
@@ -39,14 +42,13 @@
     </ul>
 
     <div class="button-container">
-      <button @click="transferEther" class="action-button transfer-btn">Transfer Ether</button>
-      <button @click="callContractFunction" class="action-button contract-btn">Call Contract Function</button>
+      <button @click="handlePayRent" class="action-button transfer-btn">{{ rentButtonLabel }}</button>
     </div>
   </div>
 </template>
 
 <script>
-import { getContractAddresses, getOwner1Info, getClient1Info, getOwner1NFTs, transferEther, callContractFunction } from "../../scripts/ethersUtils";
+import { getContractAddresses, getOwner1Info, getClient1Info, getOwner1NFTs, transferEther } from "../../scripts/ethersUtils";
 
 export default {
   data() {
@@ -56,7 +58,10 @@ export default {
       contractAddresses: {},
       owner1Info: {},
       client1Info: {},
-      owner1NFTs: []
+      owner1NFTs: [],
+      showNFTs: false, // Controls the display of Owner1 NFTs
+      rentCounter: 0, // Tracks how many months of rent have been paid
+      rentButtonLabel: "Pay Rent"
     };
   },
   async mounted() {
@@ -65,24 +70,37 @@ export default {
     this.client1Info = await getClient1Info();
     this.owner1NFTs = await getOwner1NFTs();
   },
-  methods: {
-    async transferEther() {
+methods: {
+  toggleNFTs() {
+    this.showNFTs = !this.showNFTs;
+  },
+  async handlePayRent() {
+    try {
       const from = this.client1Info.address; // Sender address (client1)
       const to = this.owner1Info.address; // Recipient address (owner1)
       const amount = "0.1"; // Amount in ETH to transfer
       await transferEther(from, to, amount);
-      alert("Transfer complete!");
-      window.location.reload(); // Refresh the page after transfer
-    },
-    async callContractFunction() {
-      const contractAddress = this.contractAddresses.propertyRental;
-      const abi = [ /* !!!!! TO DO : ABI of the contract */ ];
-      const functionName = "someFunction"; // !!!!!!!!! TO DO , Replace with actual function name
-      const args = [ /* !!!!! TO DO: Arguments for the function */ ];
-      await callContractFunction(contractAddress, abi, functionName, ...args);
-      alert("Contract function called!");
+      this.rentCounter++;
+      this.updateRentButtonLabel();
+      
+      // Re-fetch balances to reflect the updated state
+      this.client1Info = await getClient1Info();
+      this.owner1Info = await getOwner1Info();
+
+      alert("Rent payment successful!");
+    } catch (error) {
+      console.error("Error during rent payment:", error);
+      alert("Rent payment failed!");
+    }
+  },
+  updateRentButtonLabel() {
+    if (this.rentCounter === 1) {
+      this.rentButtonLabel = "Pay Rent 1 Month in Advance";
+    } else {
+      this.rentButtonLabel = `Pay Rent ${this.rentCounter} Months in Advance`;
     }
   }
+}
 };
 </script>
 
@@ -165,6 +183,15 @@ body {
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
+}
+
+.nft-display-btn {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.nft-display-btn:hover {
+  background-color: #0056b3;
 }
 
 .transfer-btn {

@@ -34,14 +34,7 @@ export async function transferEther(from, to, amount) {
   return tx;
 }
 
-// Function to call a contract function
-export async function callContractFunction(contractAddress, abi, functionName, ...args) {
-  const signer = provider.getSigner();
-  const contract = new ethers.Contract(contractAddress, abi, signer);
-  const tx = await contract[functionName](...args);
-  await tx.wait();
-  return tx;
-}
+
 
 export async function getOwner1NFTs() {
   return addresses.owner1.nfts;
