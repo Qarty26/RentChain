@@ -92,37 +92,17 @@ contract PropertyRental {
 
 
 
-
-
     function withdraw(uint256 amount) external {
-
 
         require(ownerRevenue[msg.sender] >= amount, "Insufficient revenue to withdraw");
         ownerRevenue[msg.sender] -= amount;
 
-        // uint256 contractBalanceBefore = address(this).balance;
-        // console.log("Contract balance before:", contractBalanceBefore);
-        // console.log("Before: ", msg.sender.balance);
-        
-
         (bool success, ) = payable(msg.sender).call{value: amount}("");
         require(success, "Transfer failed");
-
-
-        // console.log("After: ", msg.sender.balance);
-        // uint256 contractBalanceAfter = address(this).balance;
-        // console.logString("Contract balance after");
-        // console.logUint(contractBalanceAfter);
-        // console.logAddress(msg.sender);
 
         emit Withdraw(msg.sender, amount);
 
     }
-
-
-
-
-
 
 
 

@@ -27,6 +27,8 @@ contract Client {
     }
 
     function getClientBookings(address _client) external view returns (uint256[] memory) {
+
+        require(isClient[_client], "Not a registered client");
         return clientBookings[_client];
     }
 }

@@ -49,6 +49,120 @@ describe("PropertyRental Tests", function () {
             .connect(owner2)
             .addProperty("Beach House", "Malibu", ethers.utils.parseEther("0.5"));
         await prop3.wait();
+
+        console.log("finished before");
+
+    });
+
+    it("Should fail when getting properties of a non-owner", async function () {
+        try {
+            await propertyRental.getPropertiesByOwner(nonOwner.address);
+            assert.fail("Non-owner was able to get properties");
+        } catch (error) {
+            assert(
+                error.message.includes("Not a registered owner"),
+                "Unexpected error message for non-owner access"
+            );
+        }
+    });
+
+    it("Should fail when getting bookings of a non-client", async function () {
+        try {
+            await propertyRental.getUserBookings(nonClient.address);
+            assert.fail("Non-client was able to get bookings");
+        } catch (error) {
+            assert(
+                error.message.includes("Not a registered client"),
+                "Unexpected error message for non-client access"
+            );
+        }
+    });
+
+    it("Should fail when a non-owner tries to add a property", async function () {
+        try {
+            await propertyRental.connect(nonOwner).addProperty("Test Property", "Nowhere", ethers.utils.parseEther("1"));
+            assert.fail("Non-owner was able to add a property");
+        } catch (error) {
+            assert(
+                error.message.includes("Only owners can add properties"),
+                "Unexpected error message for non-owner adding property"
+            );
+        }
+    });
+
+    it("Should fail when a non-client tries to book a property", async function () {
+        const startDate = Math.floor(Date.now() / 1000);
+        const endDate = startDate + 86400 * 3; // 3 days
+
+        try {
+            await propertyRental.connect(nonClient).bookProperty(1, startDate, endDate, {
+                value: ethers.utils.parseEther("0.6"),
+            });
+            assert.fail("Non-client was able to book a property");
+        } catch (error) {
+            assert(
+                error.message.includes("Only clients can book properties"),
+                "Unexpected error message for non-client booking property"
+            );
+        }
+    });
+
+    it("Should fail when booking with insufficient Ether", async function () {
+        const startDate = Math.floor(Date.now() / 1000);
+        const endDate = startDate + 86400 * 2; // 2 days
+        const insufficientPayment = ethers.utils.parseEther("0.1"); // Less than required
+
+        try {
+            await propertyRental.connect(client1).bookProperty(1, startDate, endDate, {
+                value: insufficientPayment,
+            });
+            assert.fail("Booking succeeded with insufficient Ether");
+        } catch (error) {
+            assert(
+                error.message.includes("Incorrect Ether value sent"),
+                "Unexpected error message for insufficient Ether"
+            );
+        }
+    });
+
+    it("Should fail when booking a non-existent property", async function () {
+        const startDate = Math.floor(Date.now() / 1000);
+        const endDate = startDate + 86400 * 2; // 2 days
+
+        try {
+            await propertyRental.connect(client1).bookProperty(999, startDate, endDate, {
+                value: ethers.utils.parseEther("0.4"),
+            });
+            assert.fail("Booking succeeded for a non-existent property");
+        } catch (error) {
+            assert(
+                error.message.includes("Property does not exist"),
+                "Unexpected error message for non-existent property booking"
+            );
+        }
+    });
+
+    it("Should fail when booking an already booked property", async function () {
+        const startDate = Math.floor(Date.now() / 1000);
+        const endDate = startDate + 86400 * 3; // 3 days
+
+        // Client1 books property
+        await propertyRental.connect(client1).bookProperty(1, startDate, endDate, {
+            value: ethers.utils.parseEther("0.6"),
+        });
+
+        // Client2 tries to book the same property for overlapping dates
+        try {
+            await propertyRental.connect(client2).bookProperty(1, startDate + 86400, endDate + 86400, {
+                value: ethers.utils.parseEther("0.6"),
+            });
+            assert.fail("Double booking succeeded");
+        } catch (error) {
+            assert(
+                error.message.includes("Property already booked for one or more days"),
+                "Unexpected error message for double booking"
+            );
+        }
     });
 
     it("Should allow adding properties", async function () {

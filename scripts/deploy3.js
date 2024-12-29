@@ -27,7 +27,8 @@ async function deploy() {
     console.log("PropertyRental deployed at:", propertyRental.address);
 
     await ownerContract.connect(deployer).addOwner(owner1.address);
-    await ownerContract.connect(deployer).addOwner(owner1.address);
+
+    await ownerContract.getOwnerProperties(client1.address);
 
     // const prop1 = await propertyRental.connect(owner1).addProperty("Cozy Apartment", "Paris", ethers.utils.parseEther("0.2"));
     // await prop1.wait();

@@ -29,6 +29,7 @@ contract Owner {
     }
 
     function getOwnerProperties(address _owner) external view returns (uint256[] memory) {
+        require(isOwner[_owner], "Not a registered owner");
         return ownerProperties[_owner];
     }
 }
