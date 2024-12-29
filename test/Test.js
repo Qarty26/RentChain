@@ -2,11 +2,11 @@ const { ethers } = require("hardhat");
 const assert = require("assert");
 
 describe("PropertyRental Tests", function () {
-    let deployer, owner1, owner2, client1, client2;
+    let deployer, owner1, owner2, owner3 ,client1, client2, nonOwner, nonClient;
     let ownerContract, clientContract, nftContract, propertyRental;
 
     before(async () => {
-        [deployer, owner1, owner2, client1, client2] = await ethers.getSigners();
+        [deployer, owner1, owner2, owner3, client1, client2, nonOwner, nonClient] = await ethers.getSigners();
 
         // Deploy contracts
         const OwnerFactory = await ethers.getContractFactory("Owner");
@@ -32,6 +32,7 @@ describe("PropertyRental Tests", function () {
         // Add owners and clients
         await ownerContract.connect(deployer).addOwner(owner1.address);
         await ownerContract.connect(deployer).addOwner(owner2.address);
+        await ownerContract.connect(deployer).addOwner(owner3.address);
         await clientContract.connect(deployer).addClient(client1.address);
         await clientContract.connect(deployer).addClient(client2.address);
 
@@ -41,7 +42,7 @@ describe("PropertyRental Tests", function () {
         await prop1.wait();
 
         const prop2 = await propertyRental
-            .connect(owner1)
+            .connect(owner3)
             .addProperty("Modern Loft", "Berlin", ethers.utils.parseEther("0.3"));
         await prop2.wait();
 
@@ -113,7 +114,7 @@ describe("PropertyRental Tests", function () {
         const insufficientPayment = ethers.utils.parseEther("0.1"); // Less than required
 
         try {
-            await propertyRental.connect(client1).bookProperty(1, startDate, endDate, {
+            await propertyRental.connect(client2).bookProperty(1, startDate, endDate, {
                 value: insufficientPayment,
             });
             assert.fail("Booking succeeded with insufficient Ether");
@@ -147,14 +148,14 @@ describe("PropertyRental Tests", function () {
         const endDate = startDate + 86400 * 3; // 3 days
 
         // Client1 books property
-        await propertyRental.connect(client1).bookProperty(1, startDate, endDate, {
-            value: ethers.utils.parseEther("0.6"),
+        await propertyRental.connect(client1).bookProperty(2, startDate, endDate, {
+            value: ethers.utils.parseEther("0.9"),
         });
 
         // Client2 tries to book the same property for overlapping dates
         try {
-            await propertyRental.connect(client2).bookProperty(1, startDate + 86400, endDate + 86400, {
-                value: ethers.utils.parseEther("0.6"),
+            await propertyRental.connect(client2).bookProperty(2, startDate + 86400, endDate + 86400, {
+                value: ethers.utils.parseEther("0.9"),
             });
             assert.fail("Double booking succeeded");
         } catch (error) {
