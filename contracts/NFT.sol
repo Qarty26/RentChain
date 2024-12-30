@@ -23,6 +23,9 @@ contract NFT is ERC721 {
         string memory url
     ) external {
         
+        require(bytes(name).length > 0, "Token name cannot be empty");
+        require(bytes(description).length > 0, "Token description cannot be empty");
+        require(bytes(url).length > 0, "Token URL cannot be empty");
 
         tokenCount++;
         uint256 newTokenId = tokenCount;
