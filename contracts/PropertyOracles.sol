@@ -5,9 +5,10 @@ import "./Owner.sol";
 import "./Client.sol";
 import "./NFT.sol";
 import "hardhat/console.sol";
+import "@chainlink/contracts/src/v0.8/shared/interfaces/AggregatorV3Interface.sol";
 
 
-contract PropertyRental {
+contract PropertyRentalOracle {
     struct Property {
         uint256 id;
         string name;
@@ -24,17 +25,23 @@ contract PropertyRental {
     Owner public ownerContract;
     Client public clientContract;
     NFT public nftContract;
+    AggregatorV3Interface internal priceFeed;
 
     event PropertyAdded(uint256 id, string name, string location, address owner);
     event PropertyBooked(uint256 id, address client, uint256 startDate, uint256 endDate, uint256 totalCost);
     event Withdraw(address owner, uint256 amount);
 
-    constructor(address _ownerContract, address _clientContract, address _nftContract) {
+    constructor(address _ownerContract, address _clientContract, address _nftContract, address _priceFeed) {
         ownerContract = Owner(_ownerContract);
         clientContract = Client(_clientContract);
         nftContract = NFT(_nftContract);
+        priceFeed = AggregatorV3Interface(_priceFeed);
     }
 
+    function getLatestPrice() public view returns (int256) {
+        (, int256 price, , , ) = priceFeed.latestRoundData();
+        return price; // Price in 8 decimal places (e.g., $2000.00000000)
+    }
 
     function addProperty(
         string memory _name,

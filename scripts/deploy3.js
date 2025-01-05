@@ -21,12 +21,13 @@ async function deploy() {
     await clientContract.deployed();
     console.log("Client contract deployed at:", clientContract.address);
 
-    const PropertyRentalFactory = await ethers.getContractFactory("PropertyRental");
-    const propertyRental = await PropertyRentalFactory.deploy(ownerContract.address, clientContract.address, nftContract.address);
-    await propertyRental.deployed();
-    console.log("PropertyRental deployed at:", propertyRental.address);
+    const priceFeedAddress = "0x694AA1769357215DE4FAC081bf1f309aDC325306"; 
+    const PropertyRentalOracleFactory = await ethers.getContractFactory("PropertyRentalOracle");
+    const propertyRentalOracle = await PropertyRentalOracleFactory.deploy(ownerContract.address, clientContract.address, nftContract.address, priceFeedAddress);
+    await propertyRentalOracle.deployed();
+    console.log("PropertyRentalOracle deployed at:", propertyRentalOracle.address);
 
-    const ethPrice = await propertyRental.getLatestPrice();
+    const ethPrice = await propertyRentalOracle.getLatestPrice();
     console.log(ethPrice);
 
     // const prop1 = await propertyRental.connect(owner1).addProperty("Cozy Apartment", "Paris", ethers.utils.parseEther("0.2"));

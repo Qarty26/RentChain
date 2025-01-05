@@ -36,13 +36,11 @@ async function deploy() {
     console.log(); 
 
 
-    const priceFeedAddress = "0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419"; // Ethereum mainnet price feed address
     const PropertyRentalFactory = await ethers.getContractFactory("PropertyRental");
     const propertyRental = await PropertyRentalFactory.deploy(
         ownerContract.address,
         clientContract.address,
         nftContract.address,
-        priceFeedAddress
     );
     await propertyRental.deployed();
     console.log("PropertyRental deployed at:", propertyRental.address);
