@@ -99,6 +99,9 @@ contract PropertyRentalOracle {
         emit PropertyBooked(_propertyId, msg.sender, _startDate, _endDate, totalCost);
     }
 
+    function calculateBookingCost(uint256 pricePerDay, uint256 numberOfDays) public pure returns (uint256) {
+            return pricePerDay * numberOfDays;
+        }
 
 
     function withdraw(uint256 amount) external {
@@ -112,7 +115,6 @@ contract PropertyRentalOracle {
         emit Withdraw(msg.sender, amount);
 
     }
-
 
 
     function getPropertiesByOwner(address _owner) external view returns (uint256[] memory) {
