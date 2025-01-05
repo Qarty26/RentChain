@@ -30,7 +30,7 @@ https://github.com/Qarty26/RentChain/blob/9c32606d0dd76852a2560ec288410857f6bf0c
 
 - exemple pentru toate tipurile de funcții (external, pure, view etc.)
 
-https://github.com/Qarty26/RentChain/blob/9c32606d0dd76852a2560ec288410857f6bf0c1b/contracts/Property.sol#L39-L118
+https://github.com/Qarty26/RentChain/blob/adde26ea66f692dd60f803b629b3c6d6fd2356d8/contracts/Property.sol#L39-L121
 
 - exemple de transfer de eth.
 
