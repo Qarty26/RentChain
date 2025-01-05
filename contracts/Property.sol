@@ -92,6 +92,9 @@ contract PropertyRental {
         emit PropertyBooked(_propertyId, msg.sender, _startDate, _endDate, totalCost);
     }
 
+    function calculateBookingCost(uint256 pricePerDay, uint256 numberOfDays) public pure returns (uint256) {
+            return pricePerDay * numberOfDays;
+        }
 
 
     function withdraw(uint256 amount) external {
