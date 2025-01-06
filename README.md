@@ -88,8 +88,11 @@ https://github.com/Qarty26/RentChain/blob/9c32606d0dd76852a2560ec288410857f6bf0c
 ### Cerinte obligatorii:
 - Utilizarea unei librării web3 (exemple web3 sau ethersjs) și conectarea cu un Web3 Provider pentru accesarea unor informații generale despre conturi (adresa, balance).
 
+https://github.com/Qarty26/RentChain/blob/b5406003e0c66c09e65e2eacc6b20c0c2b39a097/scripts/ethersUtils.js#L1-L4
 
 - Inițierea tranzacțiilor de transfer sau de apel de funcții, utilizând clase din
 librăriile web3.
+
+https://github.com/Qarty26/RentChain/blob/b5406003e0c66c09e65e2eacc6b20c0c2b39a097/frontend/src/App.vue#L54-L84
 
 ### Cerinte optionale:
