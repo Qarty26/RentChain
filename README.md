@@ -96,3 +96,19 @@ librăriile web3.
 https://github.com/Qarty26/RentChain/blob/b5406003e0c66c09e65e2eacc6b20c0c2b39a097/frontend/src/App.vue#L54-L84
 
 ### Cerinte optionale:
+- Control al stării tranzacțiilor (tratare excepții)
+
+https://github.com/Qarty26/RentChain/blob/7d90535df6eb8a0214504db789e79e8b569694ce/frontend/src/App.vue#L109-L139
+
+
+- Analiza gas-cost (estimare cost și fixare limită de cost).
+
+https://github.com/Qarty26/RentChain/blob/7d90535df6eb8a0214504db789e79e8b569694ce/scripts/deploy2.js#L14-L16
+
+https://github.com/Qarty26/RentChain/blob/7d90535df6eb8a0214504db789e79e8b569694ce/scripts/deploy2.js#L24-L26
+  
+https://github.com/Qarty26/RentChain/blob/7d90535df6eb8a0214504db789e79e8b569694ce/scripts/deploy2.js#L34-L36
+  
+https://github.com/Qarty26/RentChain/blob/7d90535df6eb8a0214504db789e79e8b569694ce/scripts/deploy2.js#L54
+
+
