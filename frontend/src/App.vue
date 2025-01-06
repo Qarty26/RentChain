@@ -18,14 +18,12 @@
       <li class="contract-item">PropertyRental Contract: <span class="contract-address">{{ contractAddresses.propertyRental }}</span></li>
     </ul>
 
+    <hr class="section-divider" />
     <h2 class="section-title">Owner1 Info</h2>
     <ul class="info-list">
       <li class="info-item">Address: <span class="info-value">{{ owner1Info.address }}</span></li>
       <li class="info-item">Balance: <span class="info-value">{{ owner1Info.balance }} ETH</span></li>
     </ul>
-
-
-    
 
     <h2 class="section-title">Owner1 Tokens</h2>
     <button @click="toggleTokens" class="action-button token-display-btn">
@@ -38,6 +36,22 @@
       </li>
     </ul>
 
+    <h2 class="section-title">Add Property</h2>
+    <div class="add-property-form">
+      <input v-model="newPropertyName" placeholder="Property Name" class="input-field" />
+      <input v-model="newPropertyDescription" placeholder="Property Description" class="input-field" />
+      <button @click="addProperty" class="action-button add-property-btn">Add Property</button>
+    </div>
+
+    <h2 class="section-title">Add Bought Property</h2>
+    <div class="add-property-form">
+      <input v-model="newBoughtPropertyName" placeholder="Property Name" class="input-field" />
+      <input v-model="newBoughtPropertyDescription" placeholder="Property Description" class="input-field" />
+      <input v-model="newBoughtPropertyCost" placeholder="Cost (ETH)" class="input-field" type="number" />
+      <button @click="addBoughtProperty" class="action-button add-property-btn">Add Bought Property</button>
+    </div>
+
+    <hr class="section-divider" />
     <h2 class="section-title">Client1 Info</h2>
     <ul class="info-list">
       <li class="info-item">Address: <span class="info-value">{{ client1Info.address }}</span></li>
@@ -51,7 +65,7 @@
 </template>
 
 <script>
-import { getContractAddresses, getOwner1Info, getClient1Info, transferEther, getOwner1Tokens } from "../../scripts/ethersUtils";
+import { getContractAddresses, getOwner1Info, getClient1Info, transferEther, getOwner1Tokens, addPropertyToContract, addBoughtPropertyToContract } from "../../scripts/ethersUtils";
 
 export default {
   data() {
@@ -64,7 +78,13 @@ export default {
       rentCounter: 0, // Tracks how many months of rent have been paid
       rentButtonLabel: "Pay Rent",
       owner1Tokens: [],
-      showTokens: false,    };
+      showTokens: false,
+      newPropertyName: '',
+      newPropertyDescription: '',
+      newBoughtPropertyName: '',
+      newBoughtPropertyDescription: '',
+      newBoughtPropertyCost: '',
+    };
   },
   async mounted() {
     this.contractAddresses = getContractAddresses();
@@ -72,65 +92,85 @@ export default {
     this.client1Info = await getClient1Info();
     this.owner1Tokens = await getOwner1Tokens();
 
-    // Load rentCounter and rentButtonLabel from localStorage
-    const savedRentCounter = localStorage.getItem('rentCounter');
-    const savedRentButtonLabel = localStorage.getItem('rentButtonLabel');
-    if (savedRentCounter !== null) {
-      this.rentCounter = parseInt(savedRentCounter, 10);
-    }
-    if (savedRentButtonLabel !== null) {
-      this.rentButtonLabel = savedRentButtonLabel;
-    }
+    // Remove loading rentCounter and rentButtonLabel from localStorage
+    // const savedRentCounter = localStorage.getItem('rentCounter');
+    // const savedRentButtonLabel = localStorage.getItem('rentButtonLabel');
+    // if (savedRentCounter !== null) {
+    //   this.rentCounter = parseInt(savedRentCounter, 10);
+    // }
+    // if (savedRentButtonLabel !== null) {
+    //   this.rentButtonLabel = savedRentButtonLabel;
+    // }
   },
   methods: {
     toggleNFTs() {
       this.showNFTs = !this.showNFTs;
     },
     async handlePayRent() {
-  if (this.rentCounter >= 2) { 
-    alert("Maximum number of months already paid in advance!");
-
-    return;
-  }
-
-  try {
-    const clientBalance = parseFloat(this.client1Info.balance);
-    const requiredAmount = 0.1;
-
-    if (clientBalance < requiredAmount) {
-      alert("INSUFFICIENT FUNDS");
-      return;
-    }
-
-    const from = this.client1Info.address; // Sender address (client1)
-    const to = this.owner1Info.address; // Recipient address (owner1)
-    const amount = "0.1"; // Amount in ETH to transfer
-    await transferEther(from, to, amount);
-    this.rentCounter++;
-    this.updateRentButtonLabel();
-
-
-    this.client1Info = await getClient1Info();
-    this.owner1Info = await getOwner1Info();
-
-    alert("Rent payment successful!");
-  } catch (error) {
-    console.error("Error during rent payment:", error);
-    alert("Rent payment failed!");
-  }
-},
+      if (this.rentCounter >= 2) { 
+        alert("Maximum number of months already paid in advance!");
+        return;
+      }
+  
+      try {
+        const clientBalance = parseFloat(this.client1Info.balance);
+        const requiredAmount = 0.1;
+  
+        if (clientBalance < requiredAmount) {
+          alert("INSUFFICIENT FUNDS");
+          return;
+        }
+  
+        const from = this.client1Info.address; // Sender address (client1)
+        const to = this.owner1Info.address; // Recipient address (owner1)
+        const amount = "0.1"; // Amount in ETH to transfer
+        await transferEther(from, to, amount);
+        this.rentCounter++;
+        this.updateRentButtonLabel();
+  
+        this.client1Info = await getClient1Info();
+        this.owner1Info = await getOwner1Info();
+  
+        alert("Rent payment successful!");
+      } catch (error) {
+        console.error("Error during rent payment:", error);
+        alert("Rent payment failed!");
+      }
+    },
     updateRentButtonLabel() {
       if (this.rentCounter === 1) {
         this.rentButtonLabel = "Pay Rent 1 Month in Advance";
       } else {
         this.rentButtonLabel = `Pay Rent ${this.rentCounter} Months in Advance`;
       }
-      // !!!!! POT MODIFICA CA SA NU MAI FIE
-      localStorage.setItem('rentCounter', this.rentCounter);
-      localStorage.setItem('rentButtonLabel', this.rentButtonLabel);
+      // !!! save to localstorage
+      // localStorage.setItem('rentCounter', this.rentCounter);
+      // localStorage.setItem('rentButtonLabel', this.rentButtonLabel);
     },
     toggleTokens() {
       this.showTokens = !this.showTokens;
+    },
+    async addProperty() {
+      try {
+        await addPropertyToContract(this.newPropertyName, this.newPropertyDescription);
+        alert("Property added successfully!");
+        this.owner1Tokens = await getOwner1Tokens(); // Refresh the tokens
+      } catch (error) {
+        console.error("Error adding property:", error);
+        alert("Failed to add property.");
+      }
+    },
+    async addBoughtProperty() {
+      try {
+        const costString = this.newBoughtPropertyCost.toString();
+        await addBoughtPropertyToContract(this.newBoughtPropertyName, this.newBoughtPropertyDescription, costString);
+        alert("Bought property added successfully!");
+        this.owner1Tokens = await getOwner1Tokens(); // Refresh the tokens
+        this.owner1Info = await getOwner1Info(); // Refresh the owner1 info
+      } catch (error) {
+        console.error("Error adding bought property:", error);
+        alert("Failed to add bought property.");
+      }
     },
   }
 };
@@ -253,6 +293,15 @@ body {
   background-color: #0056b3;
 }
 
+.add-property-btn {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.add-property-btn:hover {
+  background-color: #218838;
+}
+
 .action-button:focus {
   outline: none;
 }
@@ -293,5 +342,24 @@ body {
 .token-value {
   font-weight: bold;
   color: #2a9d8f;
+}
+
+.add-property-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.input-field {
+  padding: 10px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.section-divider {
+  border: 1px solid black;
+  margin: 20px 0;
 }
 </style>
