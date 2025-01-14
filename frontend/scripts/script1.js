@@ -12,6 +12,16 @@ const propertyRentalAbi = [
 
 const propertyRentalContract = new ethers.Contract(addresses.propertyRental, propertyRentalAbi, provider);
 
+  export async function transferEther(from, to, amount) {
+    const signer = provider.getSigner(from);
+    const tx = await signer.sendTransaction({
+      to: to,
+      value: ethers.utils.parseEther(amount)
+    });
+    await tx.wait();
+    return tx;
+  }
+
 export async function bookProperty(propertyId, startDate, endDate, clientAddress, totalCost) {
   const signer = provider.getSigner(clientAddress);
   const propertyRentalWithSigner = propertyRentalContract.connect(signer);

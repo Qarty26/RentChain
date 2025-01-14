@@ -22,7 +22,9 @@
     <ul v-if="showTokens" class="token-list">
       <li v-for="token in owner1Tokens" :key="token.tokenId" class="token-item">
         <p>Name: <span class="token-value">{{ token.name }}</span></p>
-        <p>Description: <span class="token-value">{{ token.description }}</span></p>
+        <p>Location: <span class="token-value">{{ token.location }}</span></p>
+        <p>Price: <span class="token-value">{{ token.price }} ETH</span></p>
+        <button @click="editToken(token)" class="action-button edit-token-btn">Edit Token</button>
       </li>
     </ul>
 
@@ -40,11 +42,13 @@
       <input v-model="newBoughtPropertyCost" placeholder="Cost (ETH)" class="input-field" type="number" />
       <button @click="addBoughtProperty" class="action-button add-property-btn">Buy Property</button>
     </div>
+
+
   </div>
 </template>
 
 <script>
-import { getContractAddresses, getOwner1Info, getOwner1Tokens, addPropertyToContract, addBoughtPropertyToContract } from "../../scripts/ethersUtils";
+import { getContractAddresses, getOwner1Info, getOwner1Tokens, addPropertyToContract, addBoughtPropertyToContract, updateProperty, getPropertyPrice } from "../../scripts/ethersUtils";
 
 export default {
   name: 'Owner',
@@ -61,12 +65,20 @@ export default {
       newBoughtPropertyName: '',
       newBoughtPropertyDescription: '',
       newBoughtPropertyCost: '',
+      updatePropertyId: '',
+      updatePropertyName: '',
+      updatePropertyLocation: '',
+      updatePropertyPrice: '', // New property price
+      editTokenId: null,
+      editTokenName: '',
+      editTokenLocation: '',
+      editTokenPrice: '', // New token price
     };
   },
   async mounted() {
     this.contractAddresses = getContractAddresses();
     this.owner1Info = await getOwner1Info();
-    this.owner1Tokens = await getOwner1Tokens();
+    this.owner1Tokens = await this.fetchOwner1TokensWithPrices();
   },
   methods: {
     toggleTokens() {
@@ -87,12 +99,48 @@ export default {
         const costString = this.newBoughtPropertyCost.toString();
         await addBoughtPropertyToContract(this.newBoughtPropertyName, this.newBoughtPropertyDescription, costString);
         alert("Bought property added successfully!");
-        this.owner1Tokens = await getOwner1Tokens(); // Refresh the tokens
-        this.owner1Info = await getOwner1Info(); // Refresh the owner1 info
+        this.owner1Tokens = await getOwner1Tokens(); 
+        this.owner1Info = await getOwner1Info(); 
       } catch (error) {
         console.error("Error adding bought property:", error);
         alert("Failed to add bought property.");
       }
+    },
+    async updateProperty() {
+      try {
+        await updateProperty(this.updatePropertyId, this.updatePropertyName, this.updatePropertyLocation, this.updatePropertyPrice, this.owner1Info.address);
+        alert("Property updated successfully!");
+      } catch (error) {
+        console.error("Error updating property:", error);
+        alert("Failed to update property.");
+      }
+    },
+    async editToken(token) {
+      this.editTokenId = token.tokenId;
+      this.editTokenName = token.name;
+      this.editTokenLocation = token.description; 
+      const newName = prompt("Enter new token name:", this.editTokenName);
+      const newLocation = prompt("Enter new token location:", this.editTokenLocation);
+      const newPrice = prompt("Enter new token price (ETH):", this.editTokenPrice);
+      if (newName && newLocation && newPrice) {
+        try {
+          await updateProperty(this.editTokenId, newName, newLocation, newPrice, this.owner1Info.address);
+          alert("Token updated successfully!");
+          this.owner1Tokens = await getOwner1Tokens(); 
+        } catch (error) {
+          console.error("Error updating token:", error);
+          alert("Failed to update token.");
+        }
+      } else {
+        alert("Token name, location, and price cannot be empty.");
+      }
+    },
+    async fetchOwner1TokensWithPrices() {
+      const tokens = await getOwner1Tokens();
+      for (const token of tokens) {
+        token.price = await getPropertyPrice(token.tokenId);
+      }
+      return tokens;
     },
   }
 }
@@ -224,6 +272,24 @@ body {
   background-color: #218838;
 }
 
+.edit-token-btn {
+  background-color: #ffc107;
+  color: #fff;
+}
+
+.edit-token-btn:hover {
+  background-color: #e0a800;
+}
+
+.update-property-btn {
+  background-color: #ffc107;
+  color: #fff;
+}
+
+.update-property-btn:hover {
+  background-color: #e0a800;
+}
+
 .action-button:focus {
   outline: none;
 }
@@ -267,6 +333,13 @@ body {
 }
 
 .add-property-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.update-property-form {
   display: flex;
   flex-direction: column;
   gap: 10px;
