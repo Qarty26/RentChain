@@ -7,10 +7,17 @@ const propertyRentalAbi = [
   "function addProperty(string name, string description, uint256 price) public",
   "function bookProperty(uint256 _propertyId, uint256 _startDate, uint256 _endDate) external payable",
   "function extendBooking(uint256 _propertyId, uint256 extendedTime) external payable",
-  "function getBookingInterval(address _client, uint256 _propertyId) external view returns (uint256[2])"
+  "function getClientBookings(address _client) external view returns (uint256[] memory)"
 ];
 
 const propertyRentalContract = new ethers.Contract(addresses.propertyRental, propertyRentalAbi, provider);
+
+const clientAbi = [
+  "function getBookingInterval(address _client, uint256 _propertyId) external view returns (uint256[2])"
+];
+
+const clientContract = new ethers.Contract(addresses.client, clientAbi, provider);
+
 
   export async function transferEther(from, to, amount) {
     const signer = provider.getSigner(from);
@@ -42,17 +49,19 @@ export async function extendBooking(propertyId, extendedTime, clientAddress, tot
   return tx;
 }
 
+
 export async function getBookingInterval(clientAddress, propertyId) {
   console.log('Calling getBookingInterval with:', clientAddress, propertyId);
   try {
-    const interval = await propertyRentalContract.getBookingInterval(clientAddress, propertyId);
-    console.log('Booking interval:', interval);
+    let interval = await clientContract.getBookingInterval(clientAddress, propertyId);
+    console.log('Booking interval:', interval[0], interval[1]);
     return interval;
   } catch (error) {
     console.error('Error calling getBookingInterval:', error);
     throw error;
   }
 }
+
 
 export function getContractAddresses() {
   return addresses;
