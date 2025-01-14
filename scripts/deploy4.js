@@ -58,11 +58,11 @@ async function deploy() {
     await client2BookingTx.wait();
     console.log("Client2 booked property 3 for 5 days");
 
-    const client3BookingTx = await propertyRental.connect(client2).bookProperty(2, Math.floor(Date.now() / 1000) + 86400 * 1, Math.floor(Date.now() / 1000) + 86400 * 4, {
-        value: ethers.utils.parseEther("0.9")
+    const client3BookingTx = await propertyRental.connect(client2).bookProperty(2, Math.floor(Date.now() / 1000) + 86400 * 1, Math.floor(Date.now() / 1000) + 86400 * 2, {
+        value: ethers.utils.parseEther("0.3")
     });
     await client3BookingTx.wait();
-    console.log("Client2 booked property 2 for 3 days");
+    console.log("Client2 booked property 2 for 1 days");
 
     console.log("Revenues before extend:");
     const owner1Revenue = await propertyRental.ownerRevenue(owner1.address);
@@ -86,11 +86,11 @@ async function deploy() {
     console.log("Client2 balance:", ethers.utils.formatEther(await client2.getBalance()));
 
 
-    const client3ExtendTx = await propertyRental.connect(client2).extendBooking(2, 86400 * 2, {
-        value: ethers.utils.parseEther("0.6")
+    const client3ExtendTx = await propertyRental.connect(client2).extendBooking(2, 86400 * 3, {
+        value: ethers.utils.parseEther("0.9")
     });
     await client3ExtendTx.wait();
-    console.log("Client2 extended property 2 for 2 days");
+    console.log("Client2 extended property 2 for 3 days");
 
 
     console.log("Revenues before refund:");

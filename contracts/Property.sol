@@ -36,6 +36,26 @@ contract PropertyRental {
         nftContract = NFT(_nftContract);
     }
 
+    function updateProperty(
+        uint256 _propertyId,
+        string memory _name,
+        string memory _location,
+        uint256 _pricePerDay
+    ) external {
+
+        require(properties[_propertyId].id != 0, "Property does not exist");
+        require(properties[_propertyId].owner == msg.sender, "Only the property owner can update the property");
+        require(_pricePerDay > 0, "Price per day must be greater than zero");
+
+        properties[_propertyId].name = _name;
+        properties[_propertyId].location = _location;
+        properties[_propertyId].pricePerDay = _pricePerDay;
+
+        nftContract.updateNFT(_propertyId, _name, _location);
+
+        emit PropertyAdded(_propertyId, _name, _location, msg.sender);
+    }
+
 
     function addProperty(
         string memory _name,
