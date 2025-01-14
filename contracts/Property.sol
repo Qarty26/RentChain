@@ -20,6 +20,7 @@ contract PropertyRental {
     mapping(uint256 => Property) public properties;
     mapping(uint256 => mapping(uint256 => bool)) public isBooked; // propertyId -> day -> isBooked
     mapping(address => uint256) public ownerRevenue;
+    mapping(address => mapping(uint256 => uint256)) public bookingPayments;
 
     Owner public ownerContract;
     Client public clientContract;
@@ -80,6 +81,10 @@ contract PropertyRental {
         require(properties[_propertyId].id != 0, "Property does not exist");
         require(_endDate - _startDate >= 1 days);
 
+        for (uint256 day = _startDate / 1 days; day < _endDate / 1 days; day++) {
+            require(!isBooked[_propertyId][day], "Property already booked for one or more days");
+        }
+
         uint256 daysToBook = (_endDate - _startDate) / 1 days;
         uint256 totalCost = properties[_propertyId].pricePerDay * daysToBook;
 
@@ -88,9 +93,10 @@ contract PropertyRental {
         ownerRevenue[properties[_propertyId].owner] += msg.value;
 
         for (uint256 day = _startDate / 1 days; day < _endDate / 1 days; day++) {
-            require(!isBooked[_propertyId][day], "Property already booked for one or more days");
             isBooked[_propertyId][day] = true;
         }
+
+        bookingPayments[msg.sender][_propertyId] = msg.value;
 
         clientContract.addBooking(msg.sender, _propertyId, _startDate, _endDate);
 
@@ -109,20 +115,53 @@ contract PropertyRental {
         uint256 extendedEndDate = endDate + extendedTime; 
         uint256 daysToBook = (extendedEndDate- endDate) / 1 days;
         uint256 totalCost = properties[_propertyId].pricePerDay * daysToBook;
-
         require(msg.value == totalCost, "Incorrect Ether value sent");
+
+        for (uint256 day = endDate / 1 days; day < extendedEndDate / 1 days; day++) {
+            require(!isBooked[_propertyId][day], "Property already booked for one or more days");
+        }
+
 
         ownerRevenue[properties[_propertyId].owner] += msg.value;
 
         for (uint256 day = endDate / 1 days; day < extendedEndDate / 1 days; day++) {
-            require(!isBooked[_propertyId][day], "Property already booked for one or more days");
             isBooked[_propertyId][day] = true;
         }
+
+        bookingPayments[msg.sender][_propertyId] += msg.value;
 
         clientContract.extendBooking(msg.sender, _propertyId, startDate, extendedEndDate);
 
         emit PropertyBooked(_propertyId, msg.sender, endDate, extendedEndDate, totalCost);
     }
+
+    function refundBooking(uint256 _propertyId) external {
+        uint256 startDate = clientContract.getBookingInterval(msg.sender, _propertyId)[0];
+        uint256 endDate = clientContract.getBookingInterval(msg.sender, _propertyId)[1];
+
+        require(startDate != 0 && endDate != 0, "No valid booking found");
+        require(block.timestamp < startDate, "Cannot refund after booking start date");
+
+        uint256 amountPaid = bookingPayments[msg.sender][_propertyId];
+        require(amountPaid > 0, "No payment found for this booking");
+
+        uint256 ownerRevenueAmount = ownerRevenue[properties[_propertyId].owner];
+        require(ownerRevenueAmount >= amountPaid, "Owner does not have enough funds for refund");
+
+        for (uint256 day = startDate / 1 days; day < endDate / 1 days; day++) {
+            isBooked[_propertyId][day] = false;
+        }
+
+        clientContract.removeBooking(msg.sender, _propertyId);
+
+        ownerRevenue[properties[_propertyId].owner] -= amountPaid;
+
+        (bool success, ) = payable(msg.sender).call{value: amountPaid}("");
+        require(success, "Refund transfer failed");
+
+        emit Withdraw(msg.sender, amountPaid);
+    }
+
 
     function calculateBookingCost(uint256 pricePerDay, uint256 numberOfDays) public pure returns (uint256) {
             return pricePerDay * numberOfDays;
