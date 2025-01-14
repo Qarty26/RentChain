@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 require("@nomiclabs/hardhat-ethers");
 const { ethers } = require("hardhat");
+const internal = require('stream');
 
 async function deploy() {
     const [deployer, owner1, owner2, client1, client2] = await ethers.getSigners();
@@ -64,6 +65,16 @@ async function deploy() {
     await client3BookingTx.wait();
     console.log("Client2 booked property 2 for 1 days");
 
+
+    /// !!!!!!!!!!!!!
+
+    let intr = await clientContract.getBookingInterval(client2.address, 2);
+    console.log(intr[0]);
+    console.log(intr[1]);
+
+
+    ///////////////
+    
     console.log("Revenues before extend:");
     const owner1Revenue = await propertyRental.ownerRevenue(owner1.address);
     console.log("Owner1 revenue:", ethers.utils.formatEther(owner1Revenue));

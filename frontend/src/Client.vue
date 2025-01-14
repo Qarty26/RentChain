@@ -14,17 +14,20 @@
       <li class="info-item">Balance: <span class="info-value">{{ client1Info.balance }} ETH</span></li>
     </ul>
 
-
-
     <div class="button-container">
       <button @click="handlePayRent" class="action-button transfer-btn">{{ rentButtonLabel }}</button>
       <button @click="showAdvanceRentPopup" class="action-button transfer-btn">Pay Rent in Advance</button>
-      <button @click="displayResult" class="action-button transfer-btn">Display Result</button>
+      <button @click="fetchBookingInterval" class="action-button transfer-btn">Get Booking Interval</button>
     </div>
 
     <div v-if="result" class="result-container">
       <h3>Booking Interval Result</h3>
       <p>{{ result }}</p>
+    </div>
+
+    <div v-if="bookingInterval" class="result-container">
+      <h3>Booking Interval</h3>
+      <p>Booking Days: {{ bookingDays }}</p>
     </div>
 
     <div v-if="showPopup" class="popup-container">
@@ -35,8 +38,14 @@
         <button @click="closePopup" class="action-button">Cancel</button>
       </div>
     </div>
+
+    <div class="tips-container">
+      <input v-model="amount" type="number" class="amount-input" placeholder="Enter amount" />
+      <button @click="sendTipsToOwner" class="action-button tips-btn">Send Tips to Owner</button>
+    </div>
   </div>
 </template>
+
 <script>
 import { getContractAddresses, getClient1Info, getOwner1Info, bookProperty, getBalance, extendBooking, getBookingInterval, transferEther } from "../scripts/script1.js";
 
@@ -58,7 +67,9 @@ export default {
       showPopup: false,
       advanceDays: 1,
       result: null,
-      ownerBalance: null
+      ownerBalance: null,
+      bookingInterval: null,
+      bookingDays: null
     };
   },
   async mounted() {
@@ -74,6 +85,7 @@ export default {
         const tx = await bookProperty(this.propertyId, this.startDate, this.endDate, this.client1Info.address, this.totalCost);
         console.log('Transaction successful:', tx);
         alert('Transaction successful');
+        console.log('id proprietate: ', this.propertyId);
         await transferEther(this.client1Info.address, this.owner1Info.address, this.totalCost);
         this.balance = await getBalance(this.client1Info.address); 
         this.ownerBalance = await getBalance(this.owner1Info.address);
@@ -89,38 +101,50 @@ export default {
       this.showPopup = false;
     },
     async handlePayRentInAdvance() {
+  try {
+    const totalExtendedTime = 86400 * this.advanceDays; // Ensure 86400 seconds per day
+    const totalCostForDays = (parseFloat(this.totalCost) * this.advanceDays).toFixed(4);
+
+    const tx = await extendBooking(this.propertyId, totalExtendedTime, this.client1Info.address, totalCostForDays);
+
+    console.log('Transaction successful:', tx);
+    alert(`Transaction successful. Rent paid for ${this.advanceDays} days in advance.`);
+    await transferEther(this.client1Info.address, this.owner1Info.address, totalCostForDays);
+    this.balance = await getBalance(this.client1Info.address);
+    this.ownerBalance = await getBalance(this.owner1Info.address);
+    await this.fetchBookingInterval(); // Ensure the booking interval is updated after payment
+    this.closePopup(); 
+  } catch (error) {
+    console.error('Transaction failed:', error);
+    alert('Transaction failed');
+  }
+},
+async fetchBookingInterval() {
+  try {
+    console.log('Fetching booking interval for client:', this.client1Info.address);
+    const [start, end] = await getBookingInterval(this.client1Info.address, this.propertyId);
+    this.bookingInterval = { start: parseInt(start, 10), end: parseInt(end, 10) }; // Ensure base 10 parsing
+    this.bookingDays = Math.floor((this.bookingInterval.end - this.bookingInterval.start) / 86400);
+    console.log('Booking interval fetched:', this.bookingInterval);
+  } catch (error) {
+    console.error('Failed to get booking interval:', error);
+    alert('Failed to get booking interval.');
+  }
+},
+async sendTipsToOwner() {
       try {
-        const totalExtendedTime = this.extendedTime * this.advanceDays;
-        const totalCostForDays = (parseFloat(this.totalCost) * this.advanceDays).toFixed(4);
-        console.log('VALORI PENTRU INPUT: ', totalExtendedTime, totalCostForDays);
-
-        const tx = await extendBooking(this.propertyId, totalExtendedTime, this.client1Info.address, totalCostForDays);
-        console.log('VALORI PENTRU INPUT: ', totalExtendedTime, totalCostForDays);
-
-        console.log('Transaction successful:', tx);
-        alert(`Transaction successful. Rent paid for ${this.advanceDays} days in advance.`);
-        await transferEther(this.client1Info.address, this.owner1Info.address, totalCostForDays);
-        this.balance = await getBalance(this.client1Info.address);
-        this.ownerBalance = await getBalance(this.owner1Info.address);
-        this.closePopup(); // Close the popup after successful transaction
+        await transferEther(this.client1Info.address, this.owner1Info.address, this.amount.toString());
+        alert('Transaction successful');
       } catch (error) {
         console.error('Transaction failed:', error);
         alert('Transaction failed');
       }
-    },
-    async displayResult() {
-      try {
-        console.log('Client address:', this.client1Info.address);
-        console.log('Property ID:', this.propertyId);
-        this.result = await getBookingInterval(this.client1Info.address, this.propertyId);
-      } catch (error) {
-        console.error('Failed to get booking interval:', error);
-        alert('Failed to get booking interval');
-      }
     }
+  
   }
 };
 </script>
+
 <style scoped>
 /* General Styles */
 * {
@@ -259,6 +283,28 @@ body {
   background-color: #e2e2e2;
   border-radius: 8px;
   text-align: center;
+}
+
+.tips-container {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.amount-input {
+  padding: 15px;
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+  width: 80%;
+  box-sizing: border-box;
+}
+
+.tips-btn {
+  background-color: #007bff; /* Blue color */
+  color: #fff;
+}
+
+.tips-btn:hover {
+  background-color: #0056b3;
 }
 
 /* Responsiveness */
