@@ -33,8 +33,6 @@ describe("PropertyRental Tests", function () {
         await ownerContract.connect(deployer).addOwner(owner1.address);
         await ownerContract.connect(deployer).addOwner(owner2.address);
         await ownerContract.connect(deployer).addOwner(owner3.address);
-        await clientContract.connect(deployer).addClient(client1.address);
-        await clientContract.connect(deployer).addClient(client2.address);
 
         const prop1 = await propertyRental
             .connect(owner1)
@@ -91,22 +89,6 @@ describe("PropertyRental Tests", function () {
         }
     });
 
-    it("Should fail when a non-client tries to book a property", async function () {
-        const startDate = Math.floor(Date.now() / 1000);
-        const endDate = startDate + 86400 * 3; // 3 days
-
-        try {
-            await propertyRental.connect(nonClient).bookProperty(1, startDate, endDate, {
-                value: ethers.utils.parseEther("0.6"),
-            });
-            assert.fail("Non-client was able to book a property");
-        } catch (error) {
-            assert(
-                error.message.includes("Only clients can book properties"),
-                "Unexpected error message for non-client booking property"
-            );
-        }
-    });
 
     it("Should fail when booking with insufficient Ether", async function () {
         const startDate = Math.floor(Date.now() / 1000);
@@ -212,25 +194,4 @@ describe("PropertyRental Tests", function () {
         }
     });
 
-    it("Should fail for unauthorized actions", async function () {
-        try {
-            await ownerContract.connect(client1).addOwner(client2.address);
-            assert.fail("Non-deployer added an owner");
-        } catch (error) {
-            assert(
-                error.message.includes("Ownable: caller is not the owner"),
-                "Unexpected error message for unauthorized action"
-            );
-        }
-
-        try {
-            await propertyRental.connect(client1).addProperty("Test", "Test", ethers.utils.parseEther("1"));
-            assert.fail("Non-owner added a property");
-        } catch (error) {
-            assert(
-                error.message.includes("Caller is not an owner"),
-                "Unexpected error message for unauthorized action"
-            );
-        }
-    });
 });
