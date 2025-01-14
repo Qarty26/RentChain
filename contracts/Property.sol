@@ -110,7 +110,6 @@ contract PropertyRental {
     }
 
 
-
     function getPropertiesByOwner(address _owner) external view returns (uint256[] memory) {
         return ownerContract.getOwnerProperties(_owner);
     }

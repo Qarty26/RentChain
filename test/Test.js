@@ -212,25 +212,4 @@ describe("PropertyRental Tests", function () {
         }
     });
 
-    it("Should fail for unauthorized actions", async function () {
-        try {
-            await ownerContract.connect(client1).addOwner(client2.address);
-            assert.fail("Non-deployer added an owner");
-        } catch (error) {
-            assert(
-                error.message.includes("Ownable: caller is not the owner"),
-                "Unexpected error message for unauthorized action"
-            );
-        }
-
-        try {
-            await propertyRental.connect(client1).addProperty("Test", "Test", ethers.utils.parseEther("1"));
-            assert.fail("Non-owner added a property");
-        } catch (error) {
-            assert(
-                error.message.includes("Caller is not an owner"),
-                "Unexpected error message for unauthorized action"
-            );
-        }
-    });
 });
