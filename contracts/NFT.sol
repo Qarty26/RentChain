@@ -39,6 +39,14 @@ contract NFT is ERC721 {
         emit TokenMinted(newTokenId, name, owner);
     }
 
+    function updateNFT(uint256 tokenId, string memory name, string memory description) external {
+        
+        names[tokenId] = name;
+        descriptions[tokenId] = description;
+
+    }
+
+
     function transferToken(address from, address to, uint256 tokenId) external {
             
         address tokenOwner = ownerOf(tokenId);
