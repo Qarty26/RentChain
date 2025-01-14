@@ -63,6 +63,11 @@ contract PropertyRental {
         return propertyCount;
     }
 
+    function getPropertyPrice(uint256 propertyId) public view returns (uint256){
+
+        return properties[propertyId].pricePerDay;
+    }
+
 
     // Book property by a client
     function bookProperty(
@@ -70,7 +75,7 @@ contract PropertyRental {
         uint256 _startDate,
         uint256 _endDate
     ) external payable {
-        require(clientContract.isClient(msg.sender), "Only clients can book properties");
+        
         require(_startDate < _endDate, "Invalid booking dates");
         require(properties[_propertyId].id != 0, "Property does not exist");
         require(_endDate - _startDate >= 1 days);
@@ -87,9 +92,36 @@ contract PropertyRental {
             isBooked[_propertyId][day] = true;
         }
 
-        clientContract.addBooking(msg.sender, _propertyId);
+        clientContract.addBooking(msg.sender, _propertyId, _startDate, _endDate);
 
         emit PropertyBooked(_propertyId, msg.sender, _startDate, _endDate, totalCost);
+    }
+
+     function extendBooking(
+        uint256 _propertyId,
+        uint256 extendedTime
+    ) external payable {
+        
+        require(properties[_propertyId].id != 0, "Property does not exist");
+
+        uint256 startDate = clientContract.getBookingInterval(msg.sender, _propertyId)[0];
+        uint256 endDate = clientContract.getBookingInterval(msg.sender, _propertyId)[1];
+        uint256 extendedEndDate = endDate + extendedTime; 
+        uint256 daysToBook = (extendedEndDate- endDate) / 1 days;
+        uint256 totalCost = properties[_propertyId].pricePerDay * daysToBook;
+
+        require(msg.value == totalCost, "Incorrect Ether value sent");
+
+        ownerRevenue[properties[_propertyId].owner] += msg.value;
+
+        for (uint256 day = endDate / 1 days; day < extendedEndDate / 1 days; day++) {
+            require(!isBooked[_propertyId][day], "Property already booked for one or more days");
+            isBooked[_propertyId][day] = true;
+        }
+
+        clientContract.extendBooking(msg.sender, _propertyId, startDate, extendedEndDate);
+
+        emit PropertyBooked(_propertyId, msg.sender, endDate, extendedEndDate, totalCost);
     }
 
     function calculateBookingCost(uint256 pricePerDay, uint256 numberOfDays) public pure returns (uint256) {

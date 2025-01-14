@@ -6,24 +6,24 @@ const { ethers } = require("hardhat");
 async function deploy() {
     const [deployer, owner1, owner2, client1, client2] = await ethers.getSigners();
 
-    const OwnerFactory = await ethers.getContractFactory("Owner");
-    const ownerContract = await OwnerFactory.deploy(deployer.address);
-    await ownerContract.deployed();
-    console.log("Owner contract deployed at:", ownerContract.address);
+    // const OwnerFactory = await ethers.getContractFactory("Owner");
+    // const ownerContract = await OwnerFactory.deploy(deployer.address);
+    // await ownerContract.deployed();
+    // console.log("Owner contract deployed at:", ownerContract.address);
 
-    const NFTFactory = await ethers.getContractFactory("NFT");
-    const nftContract = await NFTFactory.deploy();
-    await nftContract.deployed();
-    console.log("NFT contract deployed at:", nftContract.address);
+    // const NFTFactory = await ethers.getContractFactory("NFT");
+    // const nftContract = await NFTFactory.deploy();
+    // await nftContract.deployed();
+    // console.log("NFT contract deployed at:", nftContract.address);
 
-    const ClientFactory = await ethers.getContractFactory("Client");
-    const clientContract = await ClientFactory.deploy(deployer.address);
-    await clientContract.deployed();
-    console.log("Client contract deployed at:", clientContract.address);
+    // const ClientFactory = await ethers.getContractFactory("Client");
+    // const clientContract = await ClientFactory.deploy(deployer.address);
+    // await clientContract.deployed();
+    // console.log("Client contract deployed at:", clientContract.address);
 
     const priceFeedAddress = "0x694AA1769357215DE4FAC081bf1f309aDC325306"; 
     const PropertyRentalOracleFactory = await ethers.getContractFactory("PropertyRentalOracle");
-    const propertyRentalOracle = await PropertyRentalOracleFactory.deploy(ownerContract.address, clientContract.address, nftContract.address, priceFeedAddress);
+    const propertyRentalOracle = await PropertyRentalOracleFactory.deploy(priceFeedAddress);
     await propertyRentalOracle.deployed();
     console.log("PropertyRentalOracle deployed at:", propertyRentalOracle.address);
 
