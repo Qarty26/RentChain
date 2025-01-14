@@ -37,6 +37,25 @@ contract Client {
 
     }
 
+
+    function removeBooking(address _client, uint256 _propertyId) external {
+
+        require(bookingDates[_client][_propertyId][0] != 0, "Booking does not exist");
+
+        uint256[] storage bookings = clientBookings[_client];
+        for (uint i = 0; i < bookings.length; i++) {
+            if (bookings[i] == _propertyId) {
+                bookings[i] = bookings[bookings.length - 1];
+                bookings.pop();
+                break;
+            }
+        }
+
+        delete bookingDates[_client][_propertyId];
+    }
+
+
+
     function getBookingInterval(address _client, uint256 _propertyId) external view returns (uint256[2] memory){
 
         return bookingDates[_client][_propertyId]; 
