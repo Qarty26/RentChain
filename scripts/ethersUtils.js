@@ -10,8 +10,21 @@ const nftAbi = [
 ];
 
 const propertyRentalAbi = [
-  "function addProperty(string name, string description, uint256 price) public"
+  "function addProperty(string name, string description, uint256 price) public",
+  "function bookProperty(uint256 _propertyId, uint256 _startDate, uint256 _endDate) external payable"
 ];
+
+const propertyRentalContract = new ethers.Contract(addresses.propertyRental, propertyRentalAbi, provider);
+
+export async function bookProperty(propertyId, startDate, endDate, clientAddress, totalCost) {
+  const signer = provider.getSigner(clientAddress);
+  const propertyRentalWithSigner = propertyRentalContract.connect(signer);
+  const tx = await propertyRentalWithSigner.bookProperty(propertyId, startDate, endDate, {
+    value: ethers.utils.parseEther(totalCost)
+  });
+  await tx.wait();
+  return tx;
+}
 
 const nftContract = new ethers.Contract(addresses.nft, nftAbi, provider);
 

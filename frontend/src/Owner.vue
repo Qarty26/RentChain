@@ -1,15 +1,6 @@
 <template>
   <div class="app-container">
     <h1 class="main-title">Web3 Account Info</h1>
-    <ul class="account-list">
-      <li v-for="account in accounts" :key="account" class="account-item">
-        Account: <span class="account">{{ account }}</span>
-      </li>
-      <li v-if="balance" class="balance-item">
-        Balance of first account: <span class="balance">{{ balance }} ETH</span>
-      </li>
-    </ul>
-
     <h2 class="section-title">Contract Addresses</h2>
     <ul class="contract-list">
       <li class="contract-item">Owner Contract: <span class="contract-address">{{ contractAddresses.owner }}</span></li>
