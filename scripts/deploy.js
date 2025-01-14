@@ -88,13 +88,15 @@ async function deploy() {
 
     console.log("Owner1 NFTs:")
     console.log(owner1.address)
-    const tokenIds = await nftContract.connect(owner1).getTokenIds();
-    await tokenIds.wait();
+    let tokenIds = await nftContract.connect(owner1).getTokenIds();
+
+    for (const tokenId of tokenIds) {
+        const name = await nftContract.getName(tokenId);
+        const description = await nftContract.getDescription(tokenId);
     
-    for(let i in tokenIds)
-    {
-        console.log(i.name);
-        console.log(i.description);
+        console.log(`Token ID: ${tokenId}`);
+        console.log(`Name: ${name}`);
+        console.log(`Description: ${description}`);
     }
 
     // save addresses and balances to a JSON file
