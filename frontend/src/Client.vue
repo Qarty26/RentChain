@@ -14,6 +14,8 @@
       <li class="info-item">Balance: <span class="info-value">{{ client1Info.balance }} ETH</span></li>
     </ul>
 
+
+
     <div class="button-container">
       <button @click="handlePayRent" class="action-button transfer-btn">{{ rentButtonLabel }}</button>
       <button @click="showAdvanceRentPopup" class="action-button transfer-btn">Pay Rent in Advance</button>
@@ -36,7 +38,7 @@
   </div>
 </template>
 <script>
-import { getContractAddresses, getClient1Info, getOwner1Info, bookProperty, getBalance, extendBooking, getBookingInterval } from "../scripts/script1.js";
+import { getContractAddresses, getClient1Info, getOwner1Info, bookProperty, getBalance, extendBooking, getBookingInterval, transferEther } from "../scripts/script1.js";
 
 export default {
   name: 'Client',
@@ -55,7 +57,8 @@ export default {
       extendedTime: 86400, // 1 day
       showPopup: false,
       advanceDays: 1,
-      result: null
+      result: null,
+      ownerBalance: null
     };
   },
   async mounted() {
@@ -63,6 +66,7 @@ export default {
     this.client1Info = await getClient1Info();
     this.owner1Info = await getOwner1Info();
     this.balance = await getBalance(this.client1Info.address);
+    this.ownerBalance = await getBalance(this.owner1Info.address);
   },
   methods: {
     async handlePayRent() {
@@ -70,7 +74,9 @@ export default {
         const tx = await bookProperty(this.propertyId, this.startDate, this.endDate, this.client1Info.address, this.totalCost);
         console.log('Transaction successful:', tx);
         alert('Transaction successful');
+        await transferEther(this.client1Info.address, this.owner1Info.address, this.totalCost);
         this.balance = await getBalance(this.client1Info.address); 
+        this.ownerBalance = await getBalance(this.owner1Info.address);
       } catch (error) {
         console.error('Transaction failed:', error);
         alert('ALREADY PAID! TRY PAYING IN ADVANCE!');
@@ -93,8 +99,10 @@ export default {
 
         console.log('Transaction successful:', tx);
         alert(`Transaction successful. Rent paid for ${this.advanceDays} days in advance.`);
+        await transferEther(this.client1Info.address, this.owner1Info.address, totalCostForDays);
         this.balance = await getBalance(this.client1Info.address);
-        this.closePopup();
+        this.ownerBalance = await getBalance(this.owner1Info.address);
+        this.closePopup(); // Close the popup after successful transaction
       } catch (error) {
         console.error('Transaction failed:', error);
         alert('Transaction failed');
@@ -113,7 +121,6 @@ export default {
   }
 };
 </script>
-
 <style scoped>
 /* General Styles */
 * {

@@ -11,7 +11,9 @@ const nftAbi = [
 
 const propertyRentalAbi = [
   "function addProperty(string name, string description, uint256 price) public",
-  "function bookProperty(uint256 _propertyId, uint256 _startDate, uint256 _endDate) external payable"
+  "function bookProperty(uint256 _propertyId, uint256 _startDate, uint256 _endDate) external payable",
+  "function updateProperty(uint256 propertyId, string name, string location, uint256 pricePerDay) public",
+  "function getPropertyPrice(uint256 propertyId) view returns (uint256)"
 ];
 
 const propertyRentalContract = new ethers.Contract(addresses.propertyRental, propertyRentalAbi, provider);
@@ -90,8 +92,22 @@ export async function getOwner1Tokens() {
   for (const tokenId of tokenIds) {
     const name = await nftContract.getName(tokenId);
     const description = await nftContract.getDescription(tokenId);
-    tokens.push({ tokenId, name, description });
+    const price = await getPropertyPrice(tokenId);
+    tokens.push({ tokenId, name, location: description, price });
   }
 
   return tokens;
+}
+
+export async function updateProperty(propertyId, name, location, price, clientAddress) {
+  const signer = provider.getSigner(clientAddress);
+  const propertyRentalWithSigner = propertyRentalContract.connect(signer);
+  const tx = await propertyRentalWithSigner.updateProperty(propertyId, name, location, ethers.utils.parseEther(price));
+  await tx.wait();
+  return tx;
+}
+
+export async function getPropertyPrice(propertyId) {
+  const price = await propertyRentalContract.getPropertyPrice(propertyId);
+  return ethers.utils.formatEther(price);
 }
