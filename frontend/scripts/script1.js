@@ -7,7 +7,8 @@ const propertyRentalAbi = [
   "function addProperty(string name, string description, uint256 price) public",
   "function bookProperty(uint256 _propertyId, uint256 _startDate, uint256 _endDate) external payable",
   "function extendBooking(uint256 _propertyId, uint256 extendedTime) external payable",
-  "function getClientBookings(address _client) external view returns (uint256[] memory)"
+  "function getClientBookings(address _client) external view returns (uint256[] memory)",
+  "function withdraw(uint256 amount) external"
 ];
 
 const propertyRentalContract = new ethers.Contract(addresses.propertyRental, propertyRentalAbi, provider);
@@ -86,4 +87,12 @@ export async function getOwner1Info() {
 export async function getBalance(address) {
   const balance = await provider.getBalance(address);
   return ethers.utils.formatEther(balance);
+}
+
+export async function withdraw(ownerAddress, amount) {
+  const signer = provider.getSigner(ownerAddress);
+  const propertyRentalWithSigner = propertyRentalContract.connect(signer);
+  const tx = await propertyRentalWithSigner.withdraw(ethers.utils.parseEther(amount.toString()));
+  await tx.wait();
+  return tx;
 }
