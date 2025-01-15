@@ -47,7 +47,7 @@
 </template>
 
 <script>
-import { getContractAddresses, getClient1Info, getOwner1Info, bookProperty, getBalance, extendBooking, getBookingInterval, transferEther } from "../scripts/script1.js";
+import { getContractAddresses, getClient1Info, getOwner1Info, bookProperty, getBalance, extendBooking, getBookingInterval, transferEther, withdraw } from "../scripts/script1.js";
 
 export default {
   name: 'Client',
@@ -86,7 +86,8 @@ export default {
         console.log('Transaction successful:', tx);
         alert('Transaction successful');
         console.log('id proprietate: ', this.propertyId);
-        await transferEther(this.client1Info.address, this.owner1Info.address, this.totalCost);
+        //await transferEther(this.client1Info.address, this.owner1Info.address, this.totalCost);
+        await withdraw(this.owner1Info.address, this.totalCost); // Call withdraw function
         this.balance = await getBalance(this.client1Info.address); 
         this.ownerBalance = await getBalance(this.owner1Info.address);
       } catch (error) {
@@ -101,37 +102,38 @@ export default {
       this.showPopup = false;
     },
     async handlePayRentInAdvance() {
-  try {
-    const totalExtendedTime = 86400 * this.advanceDays; // Ensure 86400 seconds per day
-    const totalCostForDays = (parseFloat(this.totalCost) * this.advanceDays).toFixed(4);
+      try {
+        const totalExtendedTime = 86400 * this.advanceDays; // Ensure 86400 seconds per day
+        const totalCostForDays = (parseFloat(this.totalCost) * this.advanceDays).toFixed(4);
 
-    const tx = await extendBooking(this.propertyId, totalExtendedTime, this.client1Info.address, totalCostForDays);
+        const tx = await extendBooking(this.propertyId, totalExtendedTime, this.client1Info.address, totalCostForDays);
 
-    console.log('Transaction successful:', tx);
-    alert(`Transaction successful. Rent paid for ${this.advanceDays} days in advance.`);
-    await transferEther(this.client1Info.address, this.owner1Info.address, totalCostForDays);
-    this.balance = await getBalance(this.client1Info.address);
-    this.ownerBalance = await getBalance(this.owner1Info.address);
-    await this.fetchBookingInterval(); // Ensure the booking interval is updated after payment
-    this.closePopup(); 
-  } catch (error) {
-    console.error('Transaction failed:', error);
-    alert('Transaction failed');
-  }
-},
-async fetchBookingInterval() {
-  try {
-    console.log('Fetching booking interval for client:', this.client1Info.address);
-    const [start, end] = await getBookingInterval(this.client1Info.address, this.propertyId);
-    this.bookingInterval = { start: parseInt(start, 10), end: parseInt(end, 10) }; // Ensure base 10 parsing
-    this.bookingDays = Math.floor((this.bookingInterval.end - this.bookingInterval.start) / 86400);
-    console.log('Booking interval fetched:', this.bookingInterval);
-  } catch (error) {
-    console.error('Failed to get booking interval:', error);
-    alert('Failed to get booking interval.');
-  }
-},
-async sendTipsToOwner() {
+        console.log('Transaction successful:', tx);
+        alert(`Transaction successful. Rent paid for ${this.advanceDays} days in advance.`);
+        //await transferEther(this.client1Info.address, this.owner1Info.address, totalCostForDays);
+        await withdraw(this.owner1Info.address, totalCostForDays); // Call withdraw function
+        this.balance = await getBalance(this.client1Info.address);
+        this.ownerBalance = await getBalance(this.owner1Info.address);
+        await this.fetchBookingInterval(); // Ensure the booking interval is updated after payment
+        this.closePopup(); 
+      } catch (error) {
+        console.error('Transaction failed:', error);
+        alert('Transaction failed');
+      }
+    },
+    async fetchBookingInterval() {
+      try {
+        console.log('Fetching booking interval for client:', this.client1Info.address);
+        const [start, end] = await getBookingInterval(this.client1Info.address, this.propertyId);
+        this.bookingInterval = { start: parseInt(start, 10), end: parseInt(end, 10) }; // Ensure base 10 parsing
+        this.bookingDays = Math.floor((this.bookingInterval.end - this.bookingInterval.start) / 86400);
+        console.log('Booking interval fetched:', this.bookingInterval);
+      } catch (error) {
+        console.error('Failed to get booking interval:', error);
+        alert('Failed to get booking interval.');
+      }
+    },
+    async sendTipsToOwner() {
       try {
         await transferEther(this.client1Info.address, this.owner1Info.address, this.amount.toString());
         alert('Transaction successful');
